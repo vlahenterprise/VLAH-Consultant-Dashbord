@@ -1,5 +1,5 @@
-import { getConsultantById } from "@/lib/mock-data";
-import { Client, Meeting, MeetingAction, StaffUser } from "@/lib/types";
+import { getConsultantById } from "@/lib/app-data";
+import { AppData, Client, Meeting, MeetingAction, StaffUser } from "@/lib/types";
 
 function toTime(input: string) {
   return new Date(input).getTime();
@@ -39,11 +39,11 @@ export function getClientAllActions(client: Client) {
   return client.meetings.flatMap((meeting) => meeting.actions);
 }
 
-export function getClientAssignedExperts(client: Client) {
+export function getClientAssignedExperts(data: AppData, client: Client) {
   return client.assignments
     .map((assignment) => ({
       assignment,
-      consultant: getConsultantById(assignment.consultantId),
+      consultant: getConsultantById(data, assignment.consultantId),
     }))
     .filter(
       (

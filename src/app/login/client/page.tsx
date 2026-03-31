@@ -2,9 +2,11 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
-import { clientPortalUsers, getClientById } from "@/lib/mock-data";
+import { getClientById, loadAppData } from "@/lib/app-data";
 
-export default function ClientLoginPage() {
+export default async function ClientLoginPage() {
+  const data = await loadAppData();
+
   return (
     <AppShell>
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
@@ -36,8 +38,8 @@ export default function ClientLoginPage() {
           description="Svaki klijent ima svoj dashboard, naredne sastanke, action items i deljene resurse."
         >
           <div className="grid gap-3">
-            {clientPortalUsers.map((user) => {
-              const client = getClientById(user.clientId);
+            {data.clientPortalUsers.map((user) => {
+              const client = getClientById(data, user.clientId);
 
               return (
                 <Link

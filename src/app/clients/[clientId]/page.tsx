@@ -17,8 +17,8 @@ import {
   getMeetingModulesLabel,
   isTaskOverdue,
 } from "@/lib/client-utils";
+import { getClientById, getProgramById, loadAppData } from "@/lib/app-data";
 import { formatDate, formatDateTime } from "@/lib/formatting";
-import { getClientById, getProgramById } from "@/lib/mock-data";
 import { generateJourney } from "@/lib/journey";
 import { MeetingAction, MeetingStatus } from "@/lib/types";
 
@@ -90,7 +90,8 @@ export async function generateMetadata({
   params,
 }: ClientPageProps): Promise<Metadata> {
   const { clientId } = await params;
-  const client = getClientById(clientId);
+  const data = await loadAppData();
+  const client = getClientById(data, clientId);
 
   if (!client) {
     return {
@@ -106,17 +107,18 @@ export async function generateMetadata({
 
 export default async function ClientDetailsPage({ params }: ClientPageProps) {
   const { clientId } = await params;
-  const client = getClientById(clientId);
+  const data = await loadAppData();
+  const client = getClientById(data, clientId);
 
   if (!client) {
     notFound();
   }
 
-  const program = getProgramById(client.programId);
+  const program = getProgramById(data, client.programId);
   const journey = program ? generateJourney(client, program) : [];
   const latestMeeting = getClientLatestMeeting(client);
   const nextMeeting = getClientNextMeeting(client);
-  const assignments = getClientAssignedExperts(client);
+  const assignments = getClientAssignedExperts(data, client);
   const meetingLoad = getClientMeetingLoad(client);
   const openActions = getClientOpenActions(client);
   const actionBoard = getClientAllActions(client);

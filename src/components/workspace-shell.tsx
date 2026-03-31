@@ -4,11 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
+import { canAccessAdmin, canTransferClients } from "@/lib/permissions";
 import {
   NavigationItem,
   WorkspaceActor,
 } from "@/lib/types";
-import { canAccessAdmin, canTransferClients } from "@/lib/mock-data";
 import { StatusChip } from "@/components/status-chip";
 import {
   IconCalendar,

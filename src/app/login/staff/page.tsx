@@ -2,9 +2,11 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
-import { staffUsers } from "@/lib/mock-data";
+import { loadAppData } from "@/lib/app-data";
 
-export default function StaffLoginPage() {
+export default async function StaffLoginPage() {
+  const data = await loadAppData();
+
   return (
     <AppShell>
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
@@ -35,7 +37,7 @@ export default function StaffLoginPage() {
           description="Ovo simulira login zaposlenih sa consultant, manager i admin add-on permission kombinacijama."
         >
           <div className="grid gap-3">
-            {staffUsers.map((user) => (
+            {data.staffUsers.map((user) => (
               <Link
                 key={user.id}
                 href={`/workspace/${user.id}`}

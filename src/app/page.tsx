@@ -2,9 +2,11 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
-import { clientPortalUsers, staffUsers } from "@/lib/mock-data";
+import { loadAppData } from "@/lib/app-data";
 
-export default function Home() {
+export default async function Home() {
+  const data = await loadAppData();
+
   return (
     <AppShell>
       <SectionCard
@@ -83,7 +85,7 @@ export default function Home() {
           description="Mock login dok ne uvedemo pravi auth."
         >
           <div className="grid gap-3">
-            {staffUsers.map((user) => (
+            {data.staffUsers.map((user) => (
               <Link
                 key={user.id}
                 href={`/workspace/${user.id}`}
@@ -115,7 +117,7 @@ export default function Home() {
           description="Poseban dashboard sa analytics, dokumentacijom i istorijom sastanaka."
         >
           <div className="grid gap-3">
-            {clientPortalUsers.map((user) => (
+            {data.clientPortalUsers.map((user) => (
               <Link
                 key={user.id}
                 href={`/workspace/${user.id}`}

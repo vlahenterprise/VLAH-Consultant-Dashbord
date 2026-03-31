@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { WorkspaceView } from "@/components/workspace-view";
-import { getWorkspaceActor } from "@/lib/mock-data";
+import { getWorkspaceActor, loadAppData } from "@/lib/app-data";
 import { WorkspaceSection } from "@/lib/types";
 
 type WorkspacePageProps = {
@@ -47,7 +47,8 @@ export async function generateMetadata({
   params,
 }: WorkspacePageProps): Promise<Metadata> {
   const { actorId, section } = await params;
-  const actor = getWorkspaceActor(actorId);
+  const data = await loadAppData();
+  const actor = getWorkspaceActor(data, actorId);
   const normalized = normalizeSection(section);
 
   if (!actor || !normalized) {
@@ -63,7 +64,8 @@ export async function generateMetadata({
 
 export default async function WorkspacePage({ params }: WorkspacePageProps) {
   const { actorId, section } = await params;
-  const actor = getWorkspaceActor(actorId);
+  const data = await loadAppData();
+  const actor = getWorkspaceActor(data, actorId);
   const normalized = normalizeSection(section);
 
   if (!actor || !normalized) {
@@ -77,5 +79,5 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
     notFound();
   }
 
-  return <WorkspaceView actor={actor} section={normalized} />;
+  return <WorkspaceView actor={actor} section={normalized} data={data} />;
 }

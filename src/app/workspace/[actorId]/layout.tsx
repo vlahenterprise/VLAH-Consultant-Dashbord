@@ -3,7 +3,8 @@ import { WorkspaceShell } from "@/components/workspace-shell";
 import {
   getNavigationForActor,
   getWorkspaceActor,
-} from "@/lib/mock-data";
+  loadAppData,
+} from "@/lib/app-data";
 
 type WorkspaceLayoutProps = {
   children: React.ReactNode;
@@ -15,14 +16,18 @@ export default async function WorkspaceLayout({
   params,
 }: WorkspaceLayoutProps) {
   const { actorId } = await params;
-  const actor = getWorkspaceActor(actorId);
+  const data = await loadAppData();
+  const actor = getWorkspaceActor(data, actorId);
 
   if (!actor) {
     notFound();
   }
 
   return (
-    <WorkspaceShell actor={actor} navigation={getNavigationForActor(actor)}>
+    <WorkspaceShell
+      actor={actor}
+      navigation={getNavigationForActor(data, actor)}
+    >
       {children}
     </WorkspaceShell>
   );

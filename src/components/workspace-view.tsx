@@ -15,18 +15,13 @@ import {
   isTaskOverdue,
 } from "@/lib/client-utils";
 import {
-  canAccessAdmin,
-  canTransferClients,
-  clients,
   getClientById,
   getClientsForConsultant,
   getConsultantById,
   getManagedConsultants,
   getProgramById,
   getVisibleClientsForActor,
-  programs,
-  transferSuggestions,
-} from "@/lib/mock-data";
+} from "@/lib/app-data";
 import {
   formatDate,
   formatDateTime,
@@ -34,6 +29,7 @@ import {
   formatSignedPercent,
 } from "@/lib/formatting";
 import {
+  AppData,
   Client,
   MeetingAction,
   MeetingStatus,
@@ -41,6 +37,7 @@ import {
   WorkspaceActor,
   WorkspaceSection,
 } from "@/lib/types";
+import { canAccessAdmin, canTransferClients } from "@/lib/permissions";
 
 function getRiskTone(risk: Client["riskLevel"]) {
   if (risk === "Visok") {
@@ -125,13 +122,15 @@ function MiniBars({
 }
 
 function ExpertAssignments({
+  data,
   client,
   compact = false,
 }: {
+  data: AppData;
   client: Client;
   compact?: boolean;
 }) {
-  const experts = getClientAssignedExperts(client);
+  const experts = getClientAssignedExperts(data, client);
 
   return (
     <div className={compact ? "mt-3 flex flex-wrap gap-2" : "mt-4 grid gap-3"}>
@@ -194,8 +193,14 @@ function OpenActionPreview({
   );
 }
 
-function StaffOverview({ actor }: { actor: StaffUser }) {
-  const visibleClients = getVisibleClientsForActor(actor);
+function StaffOverview({
+  actor,
+  data,
+}: {
+  actor: StaffUser;
+  data: AppData;
+}) {
+  const visibleClients = getVisibleClientsForActor(data, actor);
   const openActions = visibleClients.flatMap((client) =>
     getClientOpenActions(client).map((action) => ({ action, client })),
   );
@@ -332,7 +337,7 @@ function StaffOverview({ actor }: { actor: StaffUser }) {
         >
           <div className="grid gap-3">
             {visibleClients.map((client) => {
-              const program = getProgramById(client.programId);
+              const program = getProgramById(data, client.programId);
               const nextMeeting = getClientNextMeeting(client);
               const meetingLoad = getClientMeetingLoad(client);
 
@@ -372,7 +377,7 @@ function StaffOverview({ actor }: { actor: StaffUser }) {
                     </p>
                   </div>
 
-                  <ExpertAssignments client={client} compact />
+                  <ExpertAssignments data={data} client={client} compact />
                 </Link>
               );
             })}
@@ -467,8 +472,14 @@ function StaffOverview({ actor }: { actor: StaffUser }) {
   );
 }
 
-function StaffClients({ actor }: { actor: StaffUser }) {
-  const visibleClients = getVisibleClientsForActor(actor);
+function StaffClients({
+  actor,
+  data,
+}: {
+  actor: StaffUser;
+  data: AppData;
+}) {
+  const visibleClients = getVisibleClientsForActor(data, actor);
 
   return (
     <SectionCard
@@ -478,7 +489,7 @@ function StaffClients({ actor }: { actor: StaffUser }) {
     >
       <div className="grid gap-4 lg:grid-cols-2">
         {visibleClients.map((client) => {
-          const program = getProgramById(client.programId);
+          const program = getProgramById(data, client.programId);
           const nextMeeting = getClientNextMeeting(client);
           const openActions = getClientOpenActions(client);
           const meetingLoad = getClientMeetingLoad(client);
@@ -521,7 +532,7 @@ function StaffClients({ actor }: { actor: StaffUser }) {
                 <p>Drive hub: {client.driveRootUrl.replace("https://", "")}</p>
               </div>
 
-              <ExpertAssignments client={client} />
+              <ExpertAssignments data={data} client={client} />
             </Link>
           );
         })}
@@ -530,8 +541,14 @@ function StaffClients({ actor }: { actor: StaffUser }) {
   );
 }
 
-function StaffAnalytics({ actor }: { actor: StaffUser }) {
-  const visibleClients = getVisibleClientsForActor(actor);
+function StaffAnalytics({
+  actor,
+  data,
+}: {
+  actor: StaffUser;
+  data: AppData;
+}) {
+  const visibleClients = getVisibleClientsForActor(data, actor);
   const avgHealth =
     visibleClients.reduce((sum, client) => sum + client.analytics.healthScore, 0) /
       Math.max(1, visibleClients.length) || 0;
@@ -665,7 +682,7 @@ function StaffAnalytics({ actor }: { actor: StaffUser }) {
   );
 }
 
-function StaffPrograms() {
+function StaffPrograms({ data }: { data: AppData }) {
   return (
     <SectionCard
       eyebrow="Programs"
@@ -673,8 +690,8 @@ function StaffPrograms() {
       description="Za sada su modelovana samo ova dva programa, sa tacnim modulima, ritmovima i pravilima rada koje si definisao."
     >
       <div className="grid gap-4 lg:grid-cols-2">
-        {programs.map((program) => {
-          const enrolled = getProgramClientCount(program.id);
+        {data.programs.map((program) => {
+          const enrolled = getProgramClientCount(data, program.id);
 
           return (
             <div key={program.id} className="brand-item p-5">
@@ -738,8 +755,14 @@ function StaffPrograms() {
   );
 }
 
-function TeamSection({ actor }: { actor: StaffUser }) {
-  const consultants = getManagedConsultants(actor.id);
+function TeamSection({
+  actor,
+  data,
+}: {
+  actor: StaffUser;
+  data: AppData;
+}) {
+  const consultants = getManagedConsultants(data, actor.id);
 
   return (
     <SectionCard
@@ -754,7 +777,10 @@ function TeamSection({ actor }: { actor: StaffUser }) {
           </p>
           <div className="mt-4 grid gap-3">
             {consultants.map((consultant) => {
-              const consultantClients = getClientsForConsultant(consultant.id);
+              const consultantClients = getClientsForConsultant(
+                data,
+                consultant.id,
+              );
 
               return (
                 <div
@@ -819,10 +845,10 @@ function TeamSection({ actor }: { actor: StaffUser }) {
             Predlozi za prebacivanje klijenata
           </p>
           <div className="mt-4 grid gap-3">
-            {transferSuggestions.map((transfer) => {
-              const client = getClientById(transfer.clientId);
-              const from = getConsultantById(transfer.fromConsultantId);
-              const to = getConsultantById(transfer.toConsultantId);
+            {data.transferSuggestions.map((transfer) => {
+              const client = getClientById(data, transfer.clientId);
+              const from = getConsultantById(data, transfer.fromConsultantId);
+              const to = getConsultantById(data, transfer.toConsultantId);
 
               return (
                 <div
@@ -910,17 +936,23 @@ function AdminSection({ actor }: { actor: StaffUser }) {
   );
 }
 
-function ClientOverview({ actor }: { actor: WorkspaceActor }) {
+function ClientOverview({
+  actor,
+  data,
+}: {
+  actor: WorkspaceActor;
+  data: AppData;
+}) {
   if (actor.kind !== "client") {
     return null;
   }
 
-  const client = getClientById(actor.clientId);
+  const client = getClientById(data, actor.clientId);
   if (!client) {
     return null;
   }
 
-  const program = getProgramById(client.programId);
+  const program = getProgramById(data, client.programId);
   const nextMeeting = getClientNextMeeting(client);
   const latestMeeting = getClientLatestMeeting(client);
   const openActions = getClientOpenActions(client);
@@ -996,7 +1028,7 @@ function ClientOverview({ actor }: { actor: WorkspaceActor }) {
             <p className="text-sm font-semibold text-foreground">
               Tim oko klijenta
             </p>
-            <ExpertAssignments client={client} />
+            <ExpertAssignments data={data} client={client} />
             <div className="mt-5 rounded-[18px] border border-white/8 bg-white/4 px-4 py-4">
               <p className="text-sm font-semibold text-foreground">
                 Aktivni fokus
@@ -1112,12 +1144,18 @@ function ClientOverview({ actor }: { actor: WorkspaceActor }) {
   );
 }
 
-function ClientMeetings({ actor }: { actor: WorkspaceActor }) {
+function ClientMeetings({
+  actor,
+  data,
+}: {
+  actor: WorkspaceActor;
+  data: AppData;
+}) {
   if (actor.kind !== "client") {
     return null;
   }
 
-  const client = getClientById(actor.clientId);
+  const client = getClientById(data, actor.clientId);
   if (!client) {
     return null;
   }
@@ -1245,12 +1283,18 @@ function ClientMeetings({ actor }: { actor: WorkspaceActor }) {
   );
 }
 
-function ClientAnalytics({ actor }: { actor: WorkspaceActor }) {
+function ClientAnalytics({
+  actor,
+  data,
+}: {
+  actor: WorkspaceActor;
+  data: AppData;
+}) {
   if (actor.kind !== "client") {
     return null;
   }
 
-  const client = getClientById(actor.clientId);
+  const client = getClientById(data, actor.clientId);
   if (!client) {
     return null;
   }
@@ -1324,12 +1368,18 @@ function ClientAnalytics({ actor }: { actor: WorkspaceActor }) {
   );
 }
 
-function ClientResources({ actor }: { actor: WorkspaceActor }) {
+function ClientResources({
+  actor,
+  data,
+}: {
+  actor: WorkspaceActor;
+  data: AppData;
+}) {
   if (actor.kind !== "client") {
     return null;
   }
 
-  const client = getClientById(actor.clientId);
+  const client = getClientById(data, actor.clientId);
   if (!client) {
     return null;
   }
@@ -1409,50 +1459,52 @@ function ClientResources({ actor }: { actor: WorkspaceActor }) {
   );
 }
 
-function getProgramClientCount(programId: string) {
-  return clients.filter((client) => client.programId === programId).length;
+function getProgramClientCount(data: AppData, programId: string) {
+  return data.clients.filter((client) => client.programId === programId).length;
 }
 
 export function WorkspaceView({
   actor,
   section,
+  data,
 }: {
   actor: WorkspaceActor;
   section: WorkspaceSection;
+  data: AppData;
 }) {
   if (actor.kind === "client") {
     switch (section) {
       case "meetings":
-        return <ClientMeetings actor={actor} />;
+        return <ClientMeetings actor={actor} data={data} />;
       case "analytics":
-        return <ClientAnalytics actor={actor} />;
+        return <ClientAnalytics actor={actor} data={data} />;
       case "resources":
-        return <ClientResources actor={actor} />;
+        return <ClientResources actor={actor} data={data} />;
       default:
-        return <ClientOverview actor={actor} />;
+        return <ClientOverview actor={actor} data={data} />;
     }
   }
 
   switch (section) {
     case "clients":
-      return <StaffClients actor={actor} />;
+      return <StaffClients actor={actor} data={data} />;
     case "analytics":
-      return <StaffAnalytics actor={actor} />;
+      return <StaffAnalytics actor={actor} data={data} />;
     case "programs":
-      return <StaffPrograms />;
+      return <StaffPrograms data={data} />;
     case "team":
       return canTransferClients(actor) ? (
-        <TeamSection actor={actor} />
+        <TeamSection actor={actor} data={data} />
       ) : (
-        <StaffOverview actor={actor} />
+        <StaffOverview actor={actor} data={data} />
       );
     case "admin":
       return canAccessAdmin(actor) ? (
         <AdminSection actor={actor} />
       ) : (
-        <StaffOverview actor={actor} />
+        <StaffOverview actor={actor} data={data} />
       );
     default:
-      return <StaffOverview actor={actor} />;
+      return <StaffOverview actor={actor} data={data} />;
   }
 }

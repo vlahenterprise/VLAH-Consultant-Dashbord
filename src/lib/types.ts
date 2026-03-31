@@ -210,3 +210,11 @@ export type TransferSuggestion = {
   status: "Predlog" | "Hitno" | "Spremno";
   reason: string;
 };
+
+export type AppData = {
+  programs: Program[];
+  staffUsers: StaffUser[];
+  clients: Client[];
+  clientPortalUsers: ClientPortalUser[];
+  transferSuggestions: TransferSuggestion[];
+};
