@@ -1,65 +1,136 @@
-import Image from "next/image";
+import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
+import { SectionCard } from "@/components/section-card";
+import { StatusChip } from "@/components/status-chip";
+import { clientPortalUsers, staffUsers } from "@/lib/mock-data";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <AppShell>
+      <SectionCard
+        eyebrow="Brand-aligned MVP"
+        title="Consultant CRM po istom VLAH dark premium sistemu"
+        description="Prvi lokalni MVP sada prati isti vizuelni sistem kao Employer Management System, ali i konkretan operativni model za Master Mind i BDP."
+      >
+        <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="brand-item p-5">
+            <div className="flex flex-wrap gap-2">
+              <StatusChip label="Consultant" tone="accent" />
+              <StatusChip label="Manager" tone="warning" />
+              <StatusChip label="Admin add-on" tone="info" />
+              <StatusChip label="Client portal" tone="success" />
+            </div>
+            <p className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
+              Imamo role model, login tokove i dashboard-e za zaposlene i klijente.
+            </p>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-muted">
+              Manager moze da prebacuje klijente sa konsultanta na konsultanta.
+              Admin je add-on permission koji se daje consultant-u ili
+              manager-u i otvara settings/program/admin zonu, ali sam po sebi ne
+              daje transfer pravo.
+            </p>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <div className="rounded-[22px] border border-white/8 bg-white/4 p-4">
+                <p className="text-sm font-semibold text-foreground">
+                  Master Mind
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  Profitabilnost i Organizacija. Prvi sastanak je zajednicki 60
+                  min sa oba eksperta, pa se rad razdvaja u odvojene 1:1 tokove.
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-white/8 bg-white/4 p-4">
+                <p className="text-sm font-semibold text-foreground">BDP</p>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  Operations, Finance i HR & Leadership. Na pocetku meseca ide
+                  3:1 kickoff, zatim individualni end-of-month review-i i shared
+                  action board za klijenta.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href="/login/staff" className="brand-button">
+                Login za zaposlene
+              </Link>
+              <Link href="/login/client" className="brand-button-secondary">
+                Login za klijente
+              </Link>
+            </div>
+          </div>
+
+          <div className="brand-item p-5">
+            <p className="text-sm font-semibold text-foreground">
+              Sta je sada ukljuceno
+            </p>
+            <div className="mt-4 space-y-3 text-sm leading-6 text-muted">
+              <p>- Public landing, staff login i client login.</p>
+              <p>- Role-based workspace za consultant, manager i client portal.</p>
+              <p>- Master Mind i BDP program setup sa modulima i meeting pravilima.</p>
+              <p>- Admin add-on sekcija za programe, access i AI/storage pripremu.</p>
+              <p>- User dashboard analytics i client dashboard analytics.</p>
+              <p>- Meeting compliance: start/end, punctuality, overrun i drive lokacije.</p>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </SectionCard>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <SectionCard
+          eyebrow="Demo access"
+          title="Brzi ulaz za zaposlene"
+          description="Mock login dok ne uvedemo pravi auth."
+        >
+          <div className="grid gap-3">
+            {staffUsers.map((user) => (
+              <Link
+                key={user.id}
+                href={`/workspace/${user.id}`}
+                className="brand-item flex flex-wrap items-center justify-between gap-3 p-4 transition hover:-translate-y-0.5"
+              >
+                <div>
+                  <p className="font-semibold text-foreground">{user.name}</p>
+                  <p className="text-sm text-muted">
+                    {user.title} / {user.team}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <StatusChip
+                    label={user.role === "manager" ? "Manager" : "Consultant"}
+                    tone="accent"
+                  />
+                  {user.adminAddon ? (
+                    <StatusChip label="Admin add-on" tone="info" />
+                  ) : null}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          eyebrow="Client access"
+          title="Brzi ulaz za klijente"
+          description="Poseban dashboard sa analytics, dokumentacijom i istorijom sastanaka."
+        >
+          <div className="grid gap-3">
+            {clientPortalUsers.map((user) => (
+              <Link
+                key={user.id}
+                href={`/workspace/${user.id}`}
+                className="brand-item flex flex-wrap items-center justify-between gap-3 p-4 transition hover:-translate-y-0.5"
+              >
+                <div>
+                  <p className="font-semibold text-foreground">{user.name}</p>
+                  <p className="text-sm text-muted">{user.company}</p>
+                </div>
+                <StatusChip label="Client portal" tone="success" />
+              </Link>
+            ))}
+          </div>
+        </SectionCard>
+      </div>
+    </AppShell>
   );
 }
