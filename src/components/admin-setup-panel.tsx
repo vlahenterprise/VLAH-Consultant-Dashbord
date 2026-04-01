@@ -4,6 +4,11 @@ import { ChangeEvent, useDeferredValue, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import {
+  clientIntakeFields,
+  programPlaybooks,
+  staffIntakeFields,
+} from "@/lib/operating-model";
+import {
   BdpImportRow,
   ChipTone,
   Client,
@@ -230,6 +235,9 @@ export function AdminSetupPanel({
     programs.find((program) => program.id === clientForm.programId) ?? programs[0];
   const managers = staffUsers.filter((staff) => staff.role === "manager");
   const consultants = staffUsers.filter((staff) => staff.role === "consultant");
+  const selectedPlaybook = programPlaybooks.find(
+    (playbook) => playbook.programId === selectedProgram?.id,
+  );
   const connectedIntegrations = integrations.filter(
     (integration) => integration.status === "Connected",
   ).length;
@@ -552,13 +560,159 @@ export function AdminSetupPanel({
         </div>
       </div>
 
+      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="brand-item p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-semibold text-foreground">
+                Programski operativni playbook
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted">
+                Ovde je sada tacno definisano kako Master Mind i BDP rade, ko sta radi i sta klijent vidi.
+              </p>
+            </div>
+            <StatusChip
+              label={selectedPlaybook?.title ?? "Program"}
+              tone="accent"
+            />
+          </div>
+
+          <div className="mt-4 grid gap-4">
+            {programPlaybooks.map((playbook) => (
+              <div
+                key={playbook.programId}
+                className="rounded-[20px] border border-white/8 bg-white/4 px-4 py-4"
+              >
+                <p className="font-semibold text-foreground">{playbook.title}</p>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  {playbook.deliveryModel}
+                </p>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {playbook.meetingFlow.map((step) => (
+                    <div
+                      key={step.id}
+                      className="rounded-[18px] border border-white/8 bg-black/10 px-4 py-3"
+                    >
+                      <p className="font-semibold text-foreground">{step.title}</p>
+                      <p className="mt-1 text-sm text-muted">
+                        {step.timing} / {step.owner}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        {step.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 grid gap-3 text-sm text-muted md:grid-cols-2">
+                  <div>
+                    <p className="font-semibold text-foreground">Staff odgovornosti</p>
+                    <div className="mt-2 space-y-2">
+                      {playbook.staffResponsibilities.map((item) => (
+                        <p key={item}>- {item}</p>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Admin checklist</p>
+                    <div className="mt-2 space-y-2">
+                      {playbook.adminChecklist.map((item) => (
+                        <p key={item}>- {item}</p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-4">
+          <div className="brand-item p-5">
+            <p className="text-lg font-semibold text-foreground">
+              Sta sistem mora da cuva po sastanku
+            </p>
+            <div className="mt-4 grid gap-3">
+              {(selectedPlaybook?.meetingCapture ?? []).map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="font-semibold text-foreground">{item.title}</p>
+                    <StatusChip label={item.audience} tone="neutral" />
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-muted">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="brand-item p-5">
+            <p className="text-lg font-semibold text-foreground">
+              Onboarding podaci koji moraju da se unesu
+            </p>
+            <div className="mt-4 grid gap-4">
+              <div>
+                <p className="font-semibold text-foreground">Novi klijent</p>
+                <div className="mt-3 grid gap-3">
+                  {clientIntakeFields.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="font-semibold text-foreground">{item.label}</p>
+                        <StatusChip
+                          label={item.required ? "Obavezno" : "Opcionalno"}
+                          tone={item.required ? "warning" : "neutral"}
+                        />
+                      </div>
+                      <p className="mt-1 text-sm text-muted">{item.owner}</p>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        {item.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="font-semibold text-foreground">Novi zaposleni</p>
+                <div className="mt-3 grid gap-3">
+                  {staffIntakeFields.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="font-semibold text-foreground">{item.label}</p>
+                        <StatusChip
+                          label={item.required ? "Obavezno" : "Opcionalno"}
+                          tone={item.required ? "warning" : "neutral"}
+                        />
+                      </div>
+                      <p className="mt-1 text-sm text-muted">{item.owner}</p>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        {item.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 xl:grid-cols-2">
         <div className="brand-item p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-lg font-semibold text-foreground">Dodaj novog klijenta</p>
               <p className="mt-1 text-sm leading-6 text-muted">
-                Admin setup odmah kreira CRM karticu, portal pristup i pocetni meeting cadence po programu.
+                Admin setup odmah kreira CRM karticu, portal pristup, assignments i tacan pocetni cadence po programu.
               </p>
             </div>
             <StatusChip label={selectedProgram?.name ?? "Program"} tone="accent" />
@@ -663,6 +817,17 @@ export function AdminSetupPanel({
             ))}
           </div>
 
+          {selectedPlaybook ? (
+            <div className="mt-5 rounded-[20px] border border-white/8 bg-black/12 px-4 py-4 text-sm text-muted">
+              <p className="font-semibold text-foreground">Sta ce sistem uraditi posle kreiranja</p>
+              <div className="mt-3 space-y-2">
+                {selectedPlaybook.adminChecklist.map((item) => (
+                  <p key={item}>- {item}</p>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <button
               className="brand-button disabled:cursor-not-allowed disabled:opacity-70"
@@ -683,7 +848,7 @@ export function AdminSetupPanel({
             <div>
               <p className="text-lg font-semibold text-foreground">Dodaj zaposlenog</p>
               <p className="mt-1 text-sm leading-6 text-muted">
-                Novi consultant ili manager odmah ulazi u role model, team i admin add-on setup.
+                Novi consultant ili manager odmah ulazi u role model, team, discipline i admin add-on setup.
               </p>
             </div>
             <StatusChip label={staffForm.role} tone="warning" />
@@ -771,6 +936,24 @@ export function AdminSetupPanel({
             />
             Ukljuci admin add-on
           </label>
+
+          <div className="mt-5 rounded-[20px] border border-white/8 bg-black/12 px-4 py-4 text-sm text-muted">
+            <p className="font-semibold text-foreground">Preporucene discipline za unos</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[
+                "Profitability Consultant",
+                "Organization Consultant",
+                "Fractional Operations Manager",
+                "Finance Director",
+                "HR Fractional Director",
+                "Client Success Manager",
+              ].map((item) => (
+                <span key={item} className="brand-pill">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <button

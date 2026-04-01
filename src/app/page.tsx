@@ -14,7 +14,7 @@ export default async function Home() {
       <SectionCard
         eyebrow="Brand-aligned MVP"
         title="Consultant CRM po istom VLAH dark premium sistemu"
-        description="Prvi lokalni MVP sada prati isti vizuelni sistem kao Employer Management System, ali i konkretan operativni model za Master Mind i BDP."
+        description="Aplikacija sada vise nije genericki CRM demo, nego operativni sloj za stvarni Master Mind i BDP proces koji si definisao."
       >
         <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="brand-item p-5">
@@ -25,7 +25,7 @@ export default async function Home() {
               <StatusChip label="Client portal" tone="success" />
             </div>
             <p className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
-              Imamo role model, login tokove i dashboard-e za zaposlene i klijente.
+              Imamo odvojene tokove za admin, manager, consultant i client portal sa pravilima rada po programu.
             </p>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-muted">
               Manager moze da prebacuje klijente sa konsultanta na konsultanta.
@@ -40,16 +40,15 @@ export default async function Home() {
                   Master Mind
                 </p>
                 <p className="mt-2 text-sm leading-6 text-muted">
-                  Profitabilnost i Organizacija. Prvi sastanak je zajednicki 60
-                  min sa oba eksperta, pa se rad razdvaja u odvojene 1:1 tokove.
+                  Profitabilnost i Organizacija. Zajednicki kickoff 60 min sa oba
+                  eksperta, pa odvojeni 1:1 tokovi do zatvaranja rada i finalnog review-a.
                 </p>
               </div>
               <div className="rounded-[22px] border border-white/8 bg-white/4 p-4">
                 <p className="text-sm font-semibold text-foreground">BDP</p>
                 <p className="mt-2 text-sm leading-6 text-muted">
-                  Operations, Finance i HR & Leadership. Na pocetku meseca ide
-                  3:1 kickoff, zatim individualni end-of-month review-i i shared
-                  action board za klijenta.
+                  Operations, Finance i HR & Leadership. U prvom delu meseca je
+                  3:1, u drugom delu tri 1:1 sastanka i jedna jedinstvena akciona lista.
                 </p>
               </div>
             </div>
@@ -71,11 +70,11 @@ export default async function Home() {
             <div className="mt-4 space-y-3 text-sm leading-6 text-muted">
               <p>- Public landing, staff login i client login.</p>
               <p>- Role-based workspace za consultant, manager i client portal.</p>
-              <p>- Master Mind i BDP program setup sa modulima i meeting pravilima.</p>
-              <p>- Admin add-on sekcija za integracije, onboarding i Excel import.</p>
+              <p>- Tacni Master Mind i BDP operativni playbook-ovi sa meeting tokovima.</p>
+              <p>- Admin setup za integracije, onboarding, assignments i Excel import.</p>
               <p>- User dashboard analytics i client dashboard analytics.</p>
-              <p>- Meeting compliance: start/end, punctuality, overrun i drive lokacije.</p>
-              <p>- Pripremljen setup za Zoom, Thinkific, email, Drive i OpenAI povezivanje.</p>
+              <p>- Meeting compliance: prisustvo, start/end, punctuality, overrun i Drive evidencija.</p>
+              <p>- Zoom, Thinkific, email, Drive i OpenAI su pripremljeni kao konkretan setup sloj.</p>
             </div>
           </div>
         </div>

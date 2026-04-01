@@ -109,3 +109,108 @@ export function getMeetingModulesLabel(meeting: Meeting) {
 export function isTaskOverdue(action: MeetingAction) {
   return !action.done && toTime(action.dueDate) < Date.now();
 }
+
+export function getActionCompletionPercent(action: MeetingAction) {
+  if (typeof action.completionPercent === "number") {
+    return action.completionPercent;
+  }
+
+  return action.done ? 100 : 0;
+}
+
+export function getActionPriority(action: MeetingAction) {
+  return action.priority ?? "Srednji";
+}
+
+export function getClientActionBoardStats(client: Client) {
+  const actions = getClientAllActions(client);
+  const completed = actions.filter((action) => action.done).length;
+  const open = actions.length - completed;
+  const shared = actions.filter((action) => action.sharedWithClient).length;
+  const overdue = actions.filter((action) => isTaskOverdue(action)).length;
+
+  return {
+    total: actions.length,
+    completed,
+    open,
+    shared,
+    overdue,
+    completionRate: actions.length
+      ? Math.round((completed / actions.length) * 100)
+      : 0,
+  };
+}
+
+export function getClientMeetingBreakdown(client: Client) {
+  const isBdp = client.programId === "bdp";
+
+  if (isBdp) {
+    return [
+      {
+        label: "3:1 monthly",
+        count: client.meetings.filter((meeting) =>
+          meeting.title.includes("3:1 Monthly"),
+        ).length,
+      },
+      {
+        label: "Operations 1:1",
+        count: client.meetings.filter((meeting) =>
+          meeting.title.includes("Operations"),
+        ).length,
+      },
+      {
+        label: "Finance 1:1",
+        count: client.meetings.filter((meeting) =>
+          meeting.title.includes("Finance"),
+        ).length,
+      },
+      {
+        label: "Leadership & HR 1:1",
+        count: client.meetings.filter((meeting) =>
+          meeting.title.includes("Leadership & HR"),
+        ).length,
+      },
+    ];
+  }
+
+  return [
+    {
+      label: "Joint kickoff",
+      count: client.meetings.filter((meeting) =>
+        meeting.title.includes("Joint Kickoff"),
+      ).length,
+    },
+    {
+      label: "Profitability 1:1",
+      count: client.meetings.filter((meeting) =>
+        meeting.title.includes("Profitability"),
+      ).length,
+    },
+    {
+      label: "Organization 1:1",
+      count: client.meetings.filter((meeting) =>
+        meeting.title.includes("Organization"),
+      ).length,
+    },
+  ];
+}
+
+export function getClientMeetingComplianceStats(client: Client) {
+  const completedMeetings = client.meetings.filter(
+    (meeting) => meeting.status !== "Zakazan",
+  );
+
+  return {
+    held: completedMeetings.filter((meeting) => meeting.status === "Odrzan").length,
+    followUp: completedMeetings.filter(
+      (meeting) => meeting.status === "Potreban follow-up",
+    ).length,
+    scheduled: client.meetings.filter((meeting) => meeting.status === "Zakazan")
+      .length,
+    late: completedMeetings.filter((meeting) => !meeting.clientOnTime).length,
+    overran: completedMeetings.filter((meeting) => meeting.overran).length,
+    emailSent: completedMeetings.filter((meeting) => meeting.emailSentToClient)
+      .length,
+    aiReady: completedMeetings.filter((meeting) => meeting.aiSummaryReady).length,
+  };
+}

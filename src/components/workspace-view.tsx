@@ -9,7 +9,10 @@ import {
   meetingTemplates,
   reminderRules,
 } from "@/lib/admin-blueprints";
+import { getProgramPlaybook } from "@/lib/operating-model";
 import {
+  getActionCompletionPercent,
+  getActionPriority,
   getClientAiSummaryRate,
   getClientAllActions,
   getClientAssignedExperts,
@@ -192,6 +195,8 @@ function OpenActionPreview({
       </div>
       <p className="mt-3 text-sm text-muted">
         {action.sharedWithClient ? "Deljeno sa klijentom" : "Interna akcija"} /
+        {" "}prioritet {getActionPriority(action)} /
+        {" "}{getActionCompletionPercent(action)}% zavrseno /
         {action.reminderOnCreate ? " email na kreiranje" : " bez create email-a"} /
         {action.reminderBeforeDue ? " reminder pre roka" : " bez pre-roka"} /
         {action.reminderWhenOverdue ? " overdue reminder" : " bez overdue slanja"}
@@ -699,6 +704,7 @@ function StaffPrograms({ data }: { data: AppData }) {
       <div className="grid gap-4 lg:grid-cols-2">
         {data.programs.map((program) => {
           const enrolled = getProgramClientCount(data, program.id);
+          const playbook = getProgramPlaybook(program.id);
 
           return (
             <div key={program.id} className="brand-item p-5">
@@ -754,6 +760,31 @@ function StaffPrograms({ data }: { data: AppData }) {
                   </div>
                 ))}
               </div>
+
+              {playbook ? (
+                <div className="mt-5 grid gap-3">
+                  <div className="rounded-[18px] border border-white/8 bg-black/12 px-4 py-4">
+                    <p className="font-semibold text-foreground">
+                      Delivery model
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted">
+                      {playbook.deliveryModel}
+                    </p>
+                  </div>
+                  <div className="rounded-[18px] border border-white/8 bg-black/12 px-4 py-4">
+                    <p className="font-semibold text-foreground">
+                      Obavezni automations
+                    </p>
+                    <div className="mt-3 space-y-2 text-sm text-muted">
+                      {playbook.automations.map((automation) => (
+                        <p key={automation.id}>
+                          - {automation.title}: {automation.trigger}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
           );
         })}

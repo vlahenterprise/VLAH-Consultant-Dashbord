@@ -6,10 +6,15 @@ import { MeetingSummaryGenerator } from "@/components/meeting-summary-generator"
 import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
 import {
+  getActionCompletionPercent,
+  getActionPriority,
+  getClientActionBoardStats,
   getClientAiSummaryRate,
   getClientAllActions,
   getClientAssignedExperts,
   getClientLatestMeeting,
+  getClientMeetingBreakdown,
+  getClientMeetingComplianceStats,
   getClientMeetingLoad,
   getClientNextMeeting,
   getClientOnTimeRate,
@@ -19,6 +24,7 @@ import {
 } from "@/lib/client-utils";
 import { getClientById, getProgramById, loadAppData } from "@/lib/app-data";
 import { formatDate, formatDateTime } from "@/lib/formatting";
+import { getProgramPlaybook } from "@/lib/operating-model";
 import { generateJourney } from "@/lib/journey";
 import { MeetingAction, MeetingStatus } from "@/lib/types";
 
@@ -78,6 +84,8 @@ function ActionCard({ action }: { action: MeetingAction }) {
       </div>
       <p className="mt-3 text-sm text-muted">
         {action.sharedWithClient ? "Deljeno sa klijentom" : "Interna akcija"} /
+        {" "}prioritet {getActionPriority(action)} /
+        {" "}{getActionCompletionPercent(action)}% zavrseno /
         {action.reminderOnCreate ? " create email" : " bez create email-a"} /
         {action.reminderBeforeDue ? " reminder pre roka" : " bez pre-roka"} /
         {action.reminderWhenOverdue ? " overdue reminder" : " bez overdue slanja"}
@@ -124,6 +132,10 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
   const actionBoard = getClientAllActions(client);
   const aiCoverage = getClientAiSummaryRate(client);
   const onTimeRate = getClientOnTimeRate(client);
+  const playbook = getProgramPlaybook(client.programId);
+  const actionStats = getClientActionBoardStats(client);
+  const meetingBreakdown = getClientMeetingBreakdown(client);
+  const complianceStats = getClientMeetingComplianceStats(client);
 
   return (
     <AppShell>
@@ -269,6 +281,96 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
             </div>
           </div>
         </SectionCard>
+
+        {playbook ? (
+          <SectionCard
+            eyebrow="Operating model"
+            title={playbook.title}
+            description="Ovaj blok vise nije genericki CRM opis, nego tacan operativni nacin rada za program ovog klijenta."
+          >
+            <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+              <div className="brand-item p-5">
+                <p className="text-sm font-semibold text-foreground">
+                  Kako rad sa ovim klijentom treba da izgleda
+                </p>
+                <p className="mt-3 text-sm leading-7 text-muted">
+                  {playbook.deliveryModel}
+                </p>
+
+                <div className="mt-5 grid gap-3">
+                  {playbook.meetingFlow.map((step) => (
+                    <div
+                      key={step.id}
+                      className="rounded-[20px] border border-white/8 bg-white/4 px-4 py-4"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="font-semibold text-foreground">{step.title}</p>
+                        <StatusChip label={step.timing} tone="neutral" />
+                      </div>
+                      <p className="mt-2 text-sm text-muted">{step.owner}</p>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        {step.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                <div className="brand-item p-5">
+                  <p className="text-sm font-semibold text-foreground">
+                    Izvrsenje i disciplina
+                  </p>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
+                      <p className="text-sm text-muted">Ukupno akcija</p>
+                      <p className="mt-2 font-semibold text-foreground">
+                        {actionStats.total}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
+                      <p className="text-sm text-muted">Completion rate</p>
+                      <p className="mt-2 font-semibold text-foreground">
+                        {actionStats.completionRate}%
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
+                      <p className="text-sm text-muted">Shared with client</p>
+                      <p className="mt-2 font-semibold text-foreground">
+                        {actionStats.shared}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
+                      <p className="text-sm text-muted">Overdue</p>
+                      <p className="mt-2 font-semibold text-foreground">
+                        {actionStats.overdue}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="brand-item p-5">
+                  <p className="text-sm font-semibold text-foreground">
+                    Breakdown sastanaka
+                  </p>
+                  <div className="mt-4 grid gap-3">
+                    {meetingBreakdown.map((item) => (
+                      <div
+                        key={item.label}
+                        className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="font-semibold text-foreground">{item.label}</p>
+                          <StatusChip label={String(item.count)} tone="accent" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </SectionCard>
+        ) : null}
 
         <SectionCard
           eyebrow="Journey"
@@ -433,9 +535,54 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
 
           <div className="grid gap-6">
             <SectionCard
+              eyebrow="Compliance"
+              title="Sta je ispraceno na sastancima"
+              description="Za ovaj program merimo i odrzane sastanke, kasnjenja, overrun, email slanje i AI obradu."
+            >
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-[24px] border border-border bg-panel-strong p-5">
+                  <p className="text-sm text-muted">Odrzani</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">
+                    {complianceStats.held}
+                  </p>
+                </div>
+                <div className="rounded-[24px] border border-border bg-panel-strong p-5">
+                  <p className="text-sm text-muted">Follow-up potrebni</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">
+                    {complianceStats.followUp}
+                  </p>
+                </div>
+                <div className="rounded-[24px] border border-border bg-panel-strong p-5">
+                  <p className="text-sm text-muted">Kasnjenja klijenta</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">
+                    {complianceStats.late}
+                  </p>
+                </div>
+                <div className="rounded-[24px] border border-border bg-panel-strong p-5">
+                  <p className="text-sm text-muted">Produzeni sastanci</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">
+                    {complianceStats.overran}
+                  </p>
+                </div>
+                <div className="rounded-[24px] border border-border bg-panel-strong p-5">
+                  <p className="text-sm text-muted">Email report poslat</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">
+                    {complianceStats.emailSent}
+                  </p>
+                </div>
+                <div className="rounded-[24px] border border-border bg-panel-strong p-5">
+                  <p className="text-sm text-muted">AI summary spreman</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">
+                    {complianceStats.aiReady}
+                  </p>
+                </div>
+              </div>
+            </SectionCard>
+
+            <SectionCard
               eyebrow="Documentation"
-              title="Drive, dokumenti i deljeni board"
-              description="Ovde su podeljeni folderi, dokumentacija i taskovi koji ostaju vidljivi timu i klijentu."
+              title="Drive, dokumenti i jedinstvena akciona tabla"
+              description="Ovde su podeljeni folderi, dokumentacija i taskovi koji ostaju vidljivi timu i klijentu, bez generickog CRM sloja."
             >
               <div className="grid gap-4">
                 <div className="rounded-[24px] border border-border bg-panel-strong p-5">
@@ -498,7 +645,10 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                   <p className="text-sm font-semibold text-foreground">
                     {client.sharedActionBoard.length
                       ? "Shared action board"
-                      : "Otvorene akcije"}
+                      : "Akciona tabla za klijenta"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted">
+                    Ovde se vide prioritet, procenat zavrsenja, due date i reminder logika za svaki task.
                   </p>
                   <div className="mt-4 grid gap-3">
                     {actionBoard.length ? (

@@ -83,6 +83,47 @@ export type ImportBlueprint = {
   notes: string[];
 };
 
+export type IntakeField = {
+  id: string;
+  label: string;
+  required: boolean;
+  owner: string;
+  description: string;
+};
+
+export type EvidenceRequirement = {
+  id: string;
+  title: string;
+  audience: string;
+  description: string;
+};
+
+export type AutomationBlueprint = {
+  id: string;
+  title: string;
+  trigger: string;
+  audience: string;
+  outputs: string[];
+};
+
+export type ProgramPlaybook = {
+  programId: string;
+  title: string;
+  deliveryModel: string;
+  meetingFlow: {
+    id: string;
+    title: string;
+    timing: string;
+    owner: string;
+    description: string;
+  }[];
+  staffResponsibilities: string[];
+  clientVisibility: string[];
+  adminChecklist: string[];
+  meetingCapture: EvidenceRequirement[];
+  automations: AutomationBlueprint[];
+};
+
 export type BdpImportRow = {
   clientName: string;
   company: string;
@@ -98,6 +139,8 @@ export type MeetingAction = {
   id: string;
   title: string;
   owner: "Klijent" | "Konsultant";
+  priority?: "Nizak" | "Srednji" | "Visok";
+  completionPercent?: number;
   dueDate: string;
   done: boolean;
   sharedWithClient: boolean;
