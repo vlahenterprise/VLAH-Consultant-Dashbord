@@ -1,7 +1,14 @@
 import Link from "next/link";
+import { AdminSetupPanel } from "@/components/admin-setup-panel";
 import { MeetingSummaryGenerator } from "@/components/meeting-summary-generator";
 import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
+import {
+  importBlueprints,
+  integrationBlueprints,
+  meetingTemplates,
+  reminderRules,
+} from "@/lib/admin-blueprints";
 import {
   getClientAiSummaryRate,
   getClientAllActions,
@@ -891,47 +898,43 @@ function TeamSection({
   );
 }
 
-function AdminSection({ actor }: { actor: StaffUser }) {
+function AdminSection({
+  actor,
+  data,
+}: {
+  actor: StaffUser;
+  data: AppData;
+}) {
+  const integrations = integrationBlueprints.map((integration) => {
+    const connectedKeys = integration.envKeys.filter((key) => Boolean(process.env[key]));
+
+    return {
+      ...integration,
+      connectedKeys,
+      status: connectedKeys.length === integration.envKeys.length
+        ? "Connected"
+        : connectedKeys.length
+          ? "Planned"
+          : "Needs setup",
+    } as const;
+  });
+
   return (
     <SectionCard
       eyebrow="Admin"
-      title="Admin add-on zona"
-      description="Admin je dodatni permission layer za konfiguraciju, a ne zamena za manager transfer prava."
+      title="Admin setup i operativni centar"
+      description="Ovde su sada i integracije, onboarding novih ljudi i klijenata, BDP Excel import i biblioteka meeting template-ova."
     >
-      <div className="grid gap-4 lg:grid-cols-2">
-        {[
-          {
-            title: "Access matrix",
-            text: "Client login, employee login i dodela consultant/manager role plus admin add-on permission-a.",
-            badge: "LIVE MOCK",
-          },
-          {
-            title: "Program settings",
-            text: "Master Mind i BDP moduli, cadence, joint kickoff pravila i automatski journey generator.",
-            badge: "READY",
-          },
-          {
-            title: "AI summaries",
-            text: "OpenAI ingest srpskog audio transkripta i generisanje kratkog sastanak summary-ja za CRM i klijenta.",
-            badge: "NEXT",
-          },
-          {
-            title: "Zoom + Drive + email",
-            text: "Snimci, dokumentacija, drive folderi i reminder/report email tokovi po sastanku i task-u.",
-            badge: actor.adminAddon ? "VISIBLE" : "LOCKED",
-          },
-        ].map((item) => (
-          <div key={item.title} className="brand-item p-5">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-lg font-semibold text-foreground">
-                {item.title}
-              </p>
-              <StatusChip label={item.badge} tone="accent" />
-            </div>
-            <p className="mt-4 text-sm leading-6 text-muted">{item.text}</p>
-          </div>
-        ))}
-      </div>
+      <AdminSetupPanel
+        actorName={actor.name}
+        clients={data.clients}
+        staffUsers={data.staffUsers}
+        programs={data.programs}
+        integrations={integrations}
+        meetingTemplates={meetingTemplates}
+        reminderRules={reminderRules}
+        importBlueprints={importBlueprints}
+      />
     </SectionCard>
   );
 }
@@ -1500,7 +1503,7 @@ export function WorkspaceView({
       );
     case "admin":
       return canAccessAdmin(actor) ? (
-        <AdminSection actor={actor} />
+        <AdminSection actor={actor} data={data} />
       ) : (
         <StaffOverview actor={actor} data={data} />
       );

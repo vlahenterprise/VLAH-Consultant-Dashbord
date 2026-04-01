@@ -4,6 +4,8 @@ import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
 import { loadAppData } from "@/lib/app-data";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const data = await loadAppData();
 
@@ -70,9 +72,10 @@ export default async function Home() {
               <p>- Public landing, staff login i client login.</p>
               <p>- Role-based workspace za consultant, manager i client portal.</p>
               <p>- Master Mind i BDP program setup sa modulima i meeting pravilima.</p>
-              <p>- Admin add-on sekcija za programe, access i AI/storage pripremu.</p>
+              <p>- Admin add-on sekcija za integracije, onboarding i Excel import.</p>
               <p>- User dashboard analytics i client dashboard analytics.</p>
               <p>- Meeting compliance: start/end, punctuality, overrun i drive lokacije.</p>
+              <p>- Pripremljen setup za Zoom, Thinkific, email, Drive i OpenAI povezivanje.</p>
             </div>
           </div>
         </div>

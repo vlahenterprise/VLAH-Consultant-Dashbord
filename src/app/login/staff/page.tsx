@@ -4,6 +4,8 @@ import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
 import { loadAppData } from "@/lib/app-data";
 
+export const dynamic = "force-dynamic";
+
 export default async function StaffLoginPage() {
   const data = await loadAppData();
 

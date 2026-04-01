@@ -42,6 +42,58 @@ export type Program = {
   phases: ProgramPhase[];
 };
 
+export type IntegrationStatus = "Connected" | "Needs setup" | "Planned";
+
+export type IntegrationBlueprint = {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  envKeys: string[];
+  pulls: string[];
+  pushes: string[];
+  nextStep: string;
+};
+
+export type MeetingTemplate = {
+  id: string;
+  programId: string;
+  title: string;
+  type: string;
+  durationMinutes: number;
+  timingWindow: string;
+  modules: string[];
+  participants: string[];
+  notes: string[];
+};
+
+export type ReminderRule = {
+  id: string;
+  label: string;
+  trigger: string;
+  audience: string;
+  description: string;
+};
+
+export type ImportBlueprint = {
+  id: string;
+  title: string;
+  formats: string[];
+  columns: string[];
+  notes: string[];
+};
+
+export type BdpImportRow = {
+  clientName: string;
+  company: string;
+  email: string;
+  city: string;
+  monthlyKickoffAt?: string;
+  operationsAt?: string;
+  financeAt?: string;
+  hrLeadershipAt?: string;
+};
+
 export type MeetingAction = {
   id: string;
   title: string;

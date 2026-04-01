@@ -77,6 +77,24 @@ async function loadOrSeedSnapshot() {
   return seedData;
 }
 
+async function persistSnapshot(payload: AppData) {
+  if (!sql) {
+    return payload;
+  }
+
+  await ensureSnapshotTable();
+
+  await sql`
+    insert into app_snapshots (key, payload, updated_at)
+    values (${SNAPSHOT_KEY}, ${sql.json(payload)}, now())
+    on conflict (key) do update
+    set payload = excluded.payload,
+        updated_at = now()
+  `;
+
+  return payload;
+}
+
 export const loadAppData = cache(async (): Promise<AppData> => {
   if (!hasDatabase()) {
     return createSeedAppData();
@@ -84,6 +102,19 @@ export const loadAppData = cache(async (): Promise<AppData> => {
 
   return loadOrSeedSnapshot();
 });
+
+export async function updateAppData(
+  updater: (draft: AppData) => AppData | void | Promise<AppData | void>,
+) {
+  const current = await loadOrSeedSnapshot();
+  const draft = structuredClone(current);
+  const updated = await updater(draft);
+  const nextData = updated ?? draft;
+
+  await persistSnapshot(nextData);
+
+  return nextData;
+}
 
 export function getProgramById(data: AppData, programId: string) {
   return data.programs.find((program) => program.id === programId);
