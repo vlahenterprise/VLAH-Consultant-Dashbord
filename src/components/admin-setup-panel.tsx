@@ -70,6 +70,18 @@ function toneForIntegration(status: IntegrationStatus): ChipTone {
   return "info";
 }
 
+function formatIntegrationStatus(status: IntegrationStatus) {
+  if (status === "Connected") {
+    return "Povezano";
+  }
+
+  if (status === "Planned") {
+    return "Delimicno";
+  }
+
+  return "Treba setup";
+}
+
 function normalizeLabel(value: string) {
   return value
     .trim()
@@ -250,6 +262,33 @@ export function AdminSetupPanel({
       Number(Boolean(row.hrLeadershipAt)),
     0,
   );
+  const setupSteps = [
+    {
+      label: "1. Program",
+      title: "Izaberi Master Mind ili BDP",
+      text: "Program odredjuje module, tipove sastanaka i tok rada.",
+    },
+    {
+      label: "2. Ljudi",
+      title: "Dodeli eksperte",
+      text: "Master Mind ima 2 eksperta, BDP ima Operations, Finance i HR.",
+    },
+    {
+      label: "3. Klijent",
+      title: "Kreiraj karticu i portal",
+      text: "Klijent dobija svoju karticu, Drive hub i prvi meeting cadence.",
+    },
+    {
+      label: "4. Sastanci",
+      title: "Popuni vreme, prisustvo i linkove",
+      text: "Svaki sastanak cuva start, kraj, kasnjenje, snimke i izvestaj.",
+    },
+    {
+      label: "5. Akcije",
+      title: "Vodi jednu action listu",
+      text: "Task ima ownera, rok, prioritet, procenat i email podsetnike.",
+    },
+  ];
 
   function handleProgramChange(programId: string) {
     const nextProgram = programs.find((program) => program.id === programId);
@@ -295,7 +334,7 @@ export function AdminSetupPanel({
         }
 
         setClientFeedback(
-          `Klijent je dodat. CRM sada ima ${payload.clientCount} klijenata.`,
+          `Klijent je dodat. Baza sada ima ${payload.clientCount} klijenata.`,
         );
         setClientForm(buildInitialClientState(programs, staffUsers));
         startTransition(() => {
@@ -403,7 +442,7 @@ export function AdminSetupPanel({
         }
 
         setImportFeedback(
-          `Importovan je ${payload.importedRows} red. CRM sada ima ${payload.clientCount} klijenata.`,
+          `Importovan je ${payload.importedRows} red. Baza sada ima ${payload.clientCount} klijenata.`,
         );
         setImportRows([]);
         startTransition(() => {
@@ -419,21 +458,49 @@ export function AdminSetupPanel({
 
   return (
     <div className="grid gap-4">
+      <div className="brand-item p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-lg font-semibold text-foreground">
+              Redosled rada u admin delu
+            </p>
+            <p className="mt-1 text-sm leading-6 text-muted">
+              Prvo se postavi program i tim, zatim klijent, sastanci, akcije i integracije.
+            </p>
+          </div>
+          <StatusChip label="Operativni tok" tone="accent" />
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {setupSteps.map((step) => (
+            <div
+              key={step.label}
+              className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4"
+            >
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#ff946d]">
+                {step.label}
+              </p>
+              <p className="mt-2 font-semibold text-foreground">{step.title}</p>
+              <p className="mt-2 text-sm leading-6 text-muted">{step.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <div className="brand-kpi">
-          <p className="text-xs uppercase tracking-[0.16em] text-muted">Admin owner</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-muted">Admin</p>
           <p className="mt-3 text-2xl font-semibold text-foreground">{actorName}</p>
-          <p className="mt-2 text-sm text-muted">Centralni setup za ljude, programe i konektore</p>
+          <p className="mt-2 text-sm text-muted">Uredjuje setup i import</p>
         </div>
         <div className="brand-kpi">
           <p className="text-xs uppercase tracking-[0.16em] text-muted">Integracije</p>
           <p className="mt-3 text-2xl font-semibold text-foreground">
             {connectedIntegrations}/{integrations.length}
           </p>
-          <p className="mt-2 text-sm text-muted">Konektora spremnih ili vec povezanih</p>
+          <p className="mt-2 text-sm text-muted">Povezano / ukupno</p>
         </div>
         <div className="brand-kpi">
-          <p className="text-xs uppercase tracking-[0.16em] text-muted">Ljudi + klijenti</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-muted">Korisnici</p>
           <p className="mt-3 text-2xl font-semibold text-foreground">
             {staffUsers.length + clients.length}
           </p>
@@ -442,12 +509,12 @@ export function AdminSetupPanel({
           </p>
         </div>
         <div className="brand-kpi">
-          <p className="text-xs uppercase tracking-[0.16em] text-muted">Import preview</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-muted">BDP import</p>
           <p className="mt-3 text-2xl font-semibold text-foreground">
             {deferredImportRows.length}
           </p>
           <p className="mt-2 text-sm text-muted">
-            {totalImportedMeetings} sastanaka detektovano iz BDP batch-a
+            {totalImportedMeetings} sastanaka u preview-u
           </p>
         </div>
       </div>
@@ -457,13 +524,13 @@ export function AdminSetupPanel({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-lg font-semibold text-foreground">
-                Integration control center
+                Integracije
               </p>
               <p className="mt-1 text-sm leading-6 text-muted">
-                Zoom, Thinkific, Drive, AI i email sada imaju jasan setup status i sledeci korak.
+                Status i sledeci korak za Zoom, Thinkific, Drive, izvestaje i email.
               </p>
             </div>
-            <StatusChip label={`${connectedIntegrations} connected`} tone="accent" />
+            <StatusChip label={`${connectedIntegrations} povezano`} tone="accent" />
           </div>
 
           <div className="mt-4 grid gap-3">
@@ -477,14 +544,14 @@ export function AdminSetupPanel({
                     </p>
                   </div>
                   <StatusChip
-                    label={integration.status}
+                    label={formatIntegrationStatus(integration.status)}
                     tone={toneForIntegration(integration.status)}
                   />
                 </div>
 
                 <div className="mt-4 grid gap-3 text-sm text-muted md:grid-cols-2">
                   <div>
-                    <p className="font-semibold text-foreground">Pulls</p>
+                    <p className="font-semibold text-foreground">Prikuplja</p>
                     <div className="mt-2 space-y-2">
                       {integration.pulls.map((item) => (
                         <p key={item}>- {item}</p>
@@ -492,7 +559,7 @@ export function AdminSetupPanel({
                     </div>
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Pushes</p>
+                    <p className="font-semibold text-foreground">Salje / upisuje</p>
                     <div className="mt-2 space-y-2">
                       {integration.pushes.map((item) => (
                         <p key={item}>- {item}</p>
@@ -504,13 +571,13 @@ export function AdminSetupPanel({
                 <div className="mt-4 flex flex-wrap gap-2">
                   {integration.envKeys.map((key) => (
                     <span key={key} className="brand-pill">
-                      {integration.connectedKeys.includes(key) ? "set" : "todo"} {key}
+                      {integration.connectedKeys.includes(key) ? "povezano" : "ceka"} {key}
                     </span>
                   ))}
                 </div>
 
                 <p className="mt-4 text-sm leading-6 text-muted">
-                  Sledece: {integration.nextStep}
+                  Sledeci korak: {integration.nextStep}
                 </p>
               </div>
             ))}
@@ -519,31 +586,31 @@ export function AdminSetupPanel({
 
         <div className="grid gap-4">
           <div className="brand-item p-5">
-            <p className="text-lg font-semibold text-foreground">Portal i access pravila</p>
+            <p className="text-lg font-semibold text-foreground">Pravila pristupa</p>
             <div className="mt-4 grid gap-3 text-sm text-muted">
               <div className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4">
                 <p className="font-semibold text-foreground">Klijent portal</p>
                 <p className="mt-2">
-                  Klijent vidi samo svoju karticu, svoje sastanke, svoj shared action board i svoje materijale.
+                  Klijent vidi samo svoju karticu, svoje sastanke, svoju zajednicku action listu i svoje materijale.
                 </p>
               </div>
               <div className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4">
-                <p className="font-semibold text-foreground">Consultant workspace</p>
+                <p className="font-semibold text-foreground">Konsultantski prostor</p>
                 <p className="mt-2">
-                  Consultant vidi samo module na kojima je dodeljen i unosi sastanke, summary-je i taskove.
+                  Konsultant vidi samo module na kojima je dodeljen i unosi sastanke, izvestaje i taskove.
                 </p>
               </div>
               <div className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4">
-                <p className="font-semibold text-foreground">Manager + admin</p>
+                <p className="font-semibold text-foreground">Menadzer i admin pristup</p>
                 <p className="mt-2">
-                  Manager prebacuje klijente, admin add-on otvara setup, integracije, import i permission layer.
+                  Menadzer prebacuje klijente, a admin pristup otvara setup, integracije, import i prava pristupa.
                 </p>
               </div>
             </div>
           </div>
 
           <div className="brand-item p-5">
-            <p className="text-lg font-semibold text-foreground">Reminder playbook</p>
+            <p className="text-lg font-semibold text-foreground">Email podsetnici</p>
             <div className="mt-4 grid gap-3">
               {reminderRules.map((rule) => (
                 <div key={rule.id} className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4">
@@ -565,10 +632,10 @@ export function AdminSetupPanel({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-lg font-semibold text-foreground">
-                Programski operativni playbook
+                Programski tokovi
               </p>
               <p className="mt-1 text-sm leading-6 text-muted">
-                Ovde je sada tacno definisano kako Master Mind i BDP rade, ko sta radi i sta klijent vidi.
+                Kratak pregled kako se vode Master Mind i BDP.
               </p>
             </div>
             <StatusChip
@@ -605,7 +672,7 @@ export function AdminSetupPanel({
                 </div>
                 <div className="mt-4 grid gap-3 text-sm text-muted md:grid-cols-2">
                   <div>
-                    <p className="font-semibold text-foreground">Staff odgovornosti</p>
+                    <p className="font-semibold text-foreground">Odgovornosti</p>
                     <div className="mt-2 space-y-2">
                       {playbook.staffResponsibilities.map((item) => (
                         <p key={item}>- {item}</p>
@@ -613,7 +680,7 @@ export function AdminSetupPanel({
                     </div>
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">Admin checklist</p>
+                    <p className="font-semibold text-foreground">Admin koraci</p>
                     <div className="mt-2 space-y-2">
                       {playbook.adminChecklist.map((item) => (
                         <p key={item}>- {item}</p>
@@ -629,7 +696,7 @@ export function AdminSetupPanel({
         <div className="grid gap-4">
           <div className="brand-item p-5">
             <p className="text-lg font-semibold text-foreground">
-              Sta sistem mora da cuva po sastanku
+              Obavezno po sastanku
             </p>
             <div className="mt-4 grid gap-3">
               {(selectedPlaybook?.meetingCapture ?? []).map((item) => (
@@ -651,7 +718,7 @@ export function AdminSetupPanel({
 
           <div className="brand-item p-5">
             <p className="text-lg font-semibold text-foreground">
-              Onboarding podaci koji moraju da se unesu
+              Obavezni podaci za unos
             </p>
             <div className="mt-4 grid gap-4">
               <div>
@@ -710,9 +777,9 @@ export function AdminSetupPanel({
         <div className="brand-item p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-lg font-semibold text-foreground">Dodaj novog klijenta</p>
+              <p className="text-lg font-semibold text-foreground">Novi klijent</p>
               <p className="mt-1 text-sm leading-6 text-muted">
-                Admin setup odmah kreira CRM karticu, portal pristup, assignments i tacan pocetni cadence po programu.
+                Kreira karticu, portal, eksperte i pocetne sastanke.
               </p>
             </div>
             <StatusChip label={selectedProgram?.name ?? "Program"} tone="accent" />
@@ -846,9 +913,9 @@ export function AdminSetupPanel({
         <div className="brand-item p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-lg font-semibold text-foreground">Dodaj zaposlenog</p>
+              <p className="text-lg font-semibold text-foreground">Novi zaposleni</p>
               <p className="mt-1 text-sm leading-6 text-muted">
-                Novi consultant ili manager odmah ulazi u role model, team, discipline i admin add-on setup.
+                Dodaje konsultanta ili managera u tim, discipline i prava pristupa.
               </p>
             </div>
             <StatusChip label={staffForm.role} tone="warning" />
@@ -873,7 +940,7 @@ export function AdminSetupPanel({
             />
             <input
               className="brand-input"
-              placeholder="Title"
+              placeholder="Pozicija"
               value={staffForm.title}
               onChange={(event) =>
                 setStaffForm((current) => ({ ...current, title: event.target.value }))
@@ -894,7 +961,7 @@ export function AdminSetupPanel({
             </select>
             <input
               className="brand-input"
-              placeholder="Team"
+              placeholder="Tim"
               value={staffForm.team}
               onChange={(event) =>
                 setStaffForm((current) => ({ ...current, team: event.target.value }))
@@ -938,7 +1005,7 @@ export function AdminSetupPanel({
           </label>
 
           <div className="mt-5 rounded-[20px] border border-white/8 bg-black/12 px-4 py-4 text-sm text-muted">
-            <p className="font-semibold text-foreground">Preporucene discipline za unos</p>
+            <p className="font-semibold text-foreground">Discipline</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {[
                 "Profitability Consultant",
@@ -975,9 +1042,9 @@ export function AdminSetupPanel({
         <div className="brand-item p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-lg font-semibold text-foreground">BDP bulk import centar</p>
+              <p className="text-lg font-semibold text-foreground">BDP import iz Excela</p>
               <p className="mt-1 text-sm leading-6 text-muted">
-                Uvezi Excel/CSV sa terminima i klijentima, pa automatski kreiraj BDP klijente i 4 tipa sastanaka.
+                Uvezi klijente i 4 BDP termina: 3:1, Operations, Finance i HR.
               </p>
             </div>
             <StatusChip label={`${deferredImportRows.length} redova`} tone="accent" />
@@ -1010,7 +1077,7 @@ export function AdminSetupPanel({
                       </p>
                     </div>
                     <StatusChip
-                      label={`${Number(Boolean(row.monthlyKickoffAt)) + Number(Boolean(row.operationsAt)) + Number(Boolean(row.financeAt)) + Number(Boolean(row.hrLeadershipAt))} meetinga`}
+                      label={`${Number(Boolean(row.monthlyKickoffAt)) + Number(Boolean(row.operationsAt)) + Number(Boolean(row.financeAt)) + Number(Boolean(row.hrLeadershipAt))} sastanka`}
                       tone="info"
                     />
                   </div>
@@ -1046,7 +1113,7 @@ export function AdminSetupPanel({
 
         <div className="grid gap-4">
           <div className="brand-item p-5">
-            <p className="text-lg font-semibold text-foreground">Import template</p>
+            <p className="text-lg font-semibold text-foreground">Kolone za import</p>
             <div className="mt-4 grid gap-3">
               {importBlueprints.map((item) => (
                 <div key={item.id} className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4">
@@ -1074,7 +1141,7 @@ export function AdminSetupPanel({
           </div>
 
           <div className="brand-item p-5">
-            <p className="text-lg font-semibold text-foreground">Meeting template biblioteka</p>
+            <p className="text-lg font-semibold text-foreground">Tipovi sastanaka</p>
             <div className="mt-4 grid gap-3">
               {meetingTemplates.map((template) => (
                 <div key={template.id} className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4">

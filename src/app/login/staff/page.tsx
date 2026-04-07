@@ -13,9 +13,9 @@ export default async function StaffLoginPage() {
     <AppShell>
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <SectionCard
-          eyebrow="Staff login"
+          eyebrow="Zaposleni"
           title="Ulaz za konsultante i menadzere"
-          description="Za sada je login mock, ali flow i permissions su vec odvojeni od client porta."
+          description="Izaberi interni profil za pregled rada po ulozi."
         >
           <div className="grid gap-4">
             <input className="brand-input" placeholder="Email adresa" />
@@ -25,18 +25,18 @@ export default async function StaffLoginPage() {
               type="password"
             />
             <button type="button" className="brand-button">
-              Demo login
+              Nastavi
             </button>
             <p className="text-sm text-muted">
-              Sledeci backend korak: pravi auth, session i role mapping u bazi.
+              Trenutno koristi kartice desno za ulaz. Pravi login dolazi u sledecem backend koraku.
             </p>
           </div>
         </SectionCard>
 
         <SectionCard
-          eyebrow="Quick access"
-          title="Izaberi demo profil"
-          description="Ovo simulira login zaposlenih sa consultant, manager i admin add-on permission kombinacijama."
+          eyebrow="Profili"
+          title="Izaberi ulogu"
+          description="Konsultant, menadzer i admin pristup imaju odvojene prikaze i prava."
         >
           <div className="grid gap-3">
             {data.staffUsers.map((user) => (
@@ -55,11 +55,11 @@ export default async function StaffLoginPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <StatusChip
-                    label={user.role === "manager" ? "Manager" : "Consultant"}
+                    label={user.role === "manager" ? "Menadzer" : "Konsultant"}
                     tone="accent"
                   />
                   {user.adminAddon ? (
-                    <StatusChip label="Admin add-on" tone="info" />
+                    <StatusChip label="Admin pristup" tone="info" />
                   ) : null}
                 </div>
               </Link>

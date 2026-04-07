@@ -164,7 +164,7 @@ function buildMeeting(
     emailSentToClient: false,
     aiSummaryReady: false,
     summary:
-      "Summary ce biti generisan posle odrzanog sastanka i obrade audio transkripta.",
+      "Izvestaj ce biti generisan posle odrzanog sastanka i obrade audio transkripta.",
     transcriptPreview: "",
     actions: [],
     recording: {
@@ -345,7 +345,7 @@ function buildClientRecord(data: AppData, input: CreateClientInput) {
     riskLevel: "Nizak",
     monthlyGoal:
       program.id === "bdp"
-        ? "Pokrenuti prvi mesecni 3:1 i povezati shared action board."
+        ? "Pokrenuti prvi mesecni 3:1 i povezati zajednicku action listu."
         : "Zakazati zajednicki kickoff i otvoriti oba konsultantska toka.",
     notes:
       program.id === "bdp"

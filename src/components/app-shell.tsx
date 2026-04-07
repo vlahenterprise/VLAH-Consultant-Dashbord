@@ -5,9 +5,9 @@ import { StatusChip } from "@/components/status-chip";
 
 const navigation = [
   { href: "/", label: "Pocetna" },
-  { href: "/login/staff", label: "Staff login" },
-  { href: "/login/client", label: "Client login" },
-  { href: "/clients", label: "CRM база" },
+  { href: "/login/staff", label: "Zaposleni" },
+  { href: "/login/client", label: "Klijenti" },
+  { href: "/clients", label: "Baza klijenata" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -30,12 +30,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <StatusChip label="VLAH Consultant Hub" tone="accent" />
                 <div>
                   <p className="text-2xl font-semibold tracking-tight text-foreground">
-                    Consultant operations workspace
+                    Operativni hub za konsultantski rad
                   </p>
                   <p className="max-w-3xl text-sm leading-6 text-muted">
-                    Lokalni MVP sa istim dark premium vizuelnim sistemom kao
-                    vasa Employer aplikacija, sada prilagodjen radu sa
-                    klijentima, konsultantima, menadzerima i admin addon-om.
+                    Master Mind i BDP tokovi, klijenti, sastanci, akcije,
+                    izvestaji i admin setup na jednom mestu.
                   </p>
                 </div>
               </div>

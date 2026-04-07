@@ -9,7 +9,7 @@ export const integrationBlueprints: IntegrationBlueprint[] = [
   {
     id: "zoom",
     title: "Zoom",
-    category: "Meetings",
+    category: "Sastanci",
     description:
       "Preuzimanje meeting metadata, recording linkova i webhook signala za zakazane/odrzane sastanke.",
     envKeys: [
@@ -33,7 +33,7 @@ export const integrationBlueprints: IntegrationBlueprint[] = [
   {
     id: "thinkific",
     title: "Thinkific",
-    category: "Programs",
+    category: "Programi",
     description:
       "Sync korisnika, enrollments i course progress-a kada klijenti koriste edukativni deo programa.",
     envKeys: ["THINKIFIC_API_KEY", "THINKIFIC_SUBDOMAIN"],
@@ -44,7 +44,7 @@ export const integrationBlueprints: IntegrationBlueprint[] = [
     ],
     pushes: [
       "Mapiranje programa na Thinkific proizvode",
-      "Vidljivost course progress-a na client dashboard-u",
+      "Vidljivost course progress-a na client portalu",
     ],
     nextStep:
       "Povezati public/data API i definisati kako se Master Mind i BDP proizvodi mapiraju na klijente.",
@@ -77,16 +77,16 @@ export const integrationBlueprints: IntegrationBlueprint[] = [
     title: "OpenAI",
     category: "AI",
     description:
-      "Transkript srpskog audio fajla i generisanje strukturisanog summary-ja, action stavki i risk flag-ova.",
+      "Transkript srpskog audio fajla i generisanje strukturisanog izvestaja, akcija i rizik signala.",
     envKeys: ["OPENAI_API_KEY"],
     pulls: [
-      "Transcript i summary iz audija",
+      "Transkript i izvestaj iz audija",
       "Predlog akcija i follow-up-a",
       "Rizici i blockers iz razgovora",
     ],
     pushes: [
       "Auto-popuna izvestaja sa sastanka",
-      "Kratak summary za klijenta i interni CRM",
+      "Kratak izvestaj za klijenta i internu bazu",
     ],
     nextStep:
       "Povezati upload audio fajla i background obradu za sastanke posle Zoom recording sync-a.",
@@ -106,10 +106,10 @@ export const integrationBlueprints: IntegrationBlueprint[] = [
     pushes: [
       "Email kad se kreira task",
       "Reminder pre roka i na overdue",
-      "Meeting summary ka klijentu posle sastanka",
+      "Izvestaj sastanka ka klijentu posle sastanka",
     ],
     nextStep:
-      "Dodati provider i templating za task, reminder i meeting summary email tokove.",
+      "Dodati provider i templating za task, reminder i email izvestaje.",
   },
 ];
 
@@ -143,7 +143,7 @@ export const meetingTemplates: MeetingTemplate[] = [
     participants: ["Klijent", "Profitability Consultant"],
     notes: [
       "Fokus na marzama, cash disciplini i profitabilnosti.",
-      "Do 2-8 sastanaka po klijentu, target prosek do 4.",
+      "Do 2-8 sastanaka po klijentu, norma prosek do 4.",
     ],
   },
   {
@@ -157,7 +157,7 @@ export const meetingTemplates: MeetingTemplate[] = [
     participants: ["Klijent", "Organization Consultant"],
     notes: [
       "Fokus na ownership-u, strukturi i organizacionom sistemu.",
-      "Posle svakog sastanka ide summary, drive link i evidence.",
+      "Posle svakog sastanka ide izvestaj, drive link i evidencija.",
     ],
   },
   {
@@ -190,7 +190,7 @@ export const meetingTemplates: MeetingTemplate[] = [
     participants: ["Klijent", "Fractional Operations Manager"],
     notes: [
       "Jedan ekspert radi 1:1 review po svojoj oblasti.",
-      "Summary ide iz transkripta i upisuje se u zajednicki CRM.",
+      "Summary ide iz transkripta i upisuje se na karticu klijenta.",
     ],
   },
   {
@@ -204,7 +204,7 @@ export const meetingTemplates: MeetingTemplate[] = [
     participants: ["Klijent", "Finance Director"],
     notes: [
       "Pokriva cash flow, profit fokus i finansijsku disciplinu.",
-      "Akcije se upisuju na shared action board koji vidi i klijent.",
+      "Akcije se upisuju u zajednicku action listu koju vidi i klijent.",
     ],
   },
   {
@@ -254,7 +254,7 @@ export const reminderRules: ReminderRule[] = [
     trigger: "Posle obrade transkripta",
     audience: "Klijent + relevantni konsultanti",
     description:
-      "Salje strukturisan summary sastanka, dogovorene akcije i linkove ka materijalima.",
+      "Salje strukturisan izvestaj sastanka, dogovorene akcije i linkove ka materijalima.",
   },
 ];
 

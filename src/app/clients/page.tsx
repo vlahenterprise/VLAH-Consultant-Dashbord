@@ -66,9 +66,9 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
     <AppShell>
       <div className="grid gap-4">
         <SectionCard
-          eyebrow="Client base"
-          title="CRM baza klijenata"
-          description="Pretrazi i filtriraj portfolio po programu, riziku i statusu, pa udji direktno u detaljan profil klijenta."
+          eyebrow="Klijenti"
+          title="Baza klijenata"
+          description="Pretraga po imenu, firmi, programu, riziku i statusu."
         >
           <div className="grid gap-4">
             <form className="grid gap-3 xl:grid-cols-[1.3fr_0.7fr_0.7fr_0.7fr]">
@@ -76,7 +76,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                 name="q"
                 defaultValue={filters.q ?? ""}
                 className="brand-input"
-                placeholder="Pretraga po imenu, firmi, email-u, tagu ili modulu"
+                placeholder="Ime, firma, email, tag ili modul"
               />
               <select
                 name="program"
@@ -126,13 +126,13 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
               </div>
               <div className="brand-kpi">
                 <p className="text-xs uppercase tracking-[0.16em] text-muted">
-                  Open actions
+                  Otvorene akcije
                 </p>
                 <p className="mt-3 text-3xl font-semibold text-foreground">
                   {totalOpenActions}
                 </p>
                 <p className="mt-2 text-sm text-muted">
-                  kroz trenutno filtriran portfolio
+                  u prikazanoj listi
                 </p>
               </div>
               <div className="brand-kpi">
@@ -143,7 +143,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                   {atRiskCount}
                 </p>
                 <p className="mt-2 text-sm text-muted">
-                  klijenata trazi vise paznje
+                  trazi vise paznje
                 </p>
               </div>
             </div>
@@ -151,9 +151,9 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
         </SectionCard>
 
         <SectionCard
-          eyebrow="Client list"
-          title="Svi klijenti"
-          description="Pregled baze klijenata sa programom, modulima, dodeljenim ekspertima, meeting target-om i direktnim ulazom u detaljan profil."
+          eyebrow="Lista"
+          title="Klijenti"
+          description="Klik na karticu otvara operativni profil klijenta."
         >
           <div className="grid gap-4">
             {filteredClients.length ? (
@@ -212,7 +212,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                           <span className="font-semibold text-foreground">
                             Sastanci:
                           </span>{" "}
-                          {meetingLoad.total} / target {client.meetingAverageTarget}
+                          {meetingLoad.total} / norma {client.meetingAverageTarget}
                         </p>
                       </div>
 

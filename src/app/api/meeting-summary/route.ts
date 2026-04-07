@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
   if (!transcript) {
     return Response.json(
-      { error: "Transcript je obavezan." },
+      { error: "Transkript je obavezan." },
       { status: 400 },
     );
   }
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   const riskFlags = detectRisks(ideas);
 
   const result: SummaryResult = {
-    overview: `${body.clientName ?? "Klijent"} je na sastanku "${body.meetingTitle ?? "1:1"}" prosao kroz glavne blokere, trenutni status i sledece korake. Ovaj response je demo placeholder za kasniji OpenAI summary nad audio fajlom.`,
+    overview: `${body.clientName ?? "Klijent"} je na sastanku "${body.meetingTitle ?? "1:1"}" prosao kroz glavne teme, trenutni status i sledece korake.`,
     keyPoints: keyPoints.length
       ? keyPoints
       : ["Nema dovoljno sadrzaja za automatsko izdvajanje kljucnih tacaka."],

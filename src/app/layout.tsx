@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s | VLAH Consultant Hub",
   },
   description:
-    "Dark premium consultant operations workspace inspired by the VLAH enterprise app brand system.",
+    "Operativni hub za VLAH konsultante, klijente, sastanke i akcije.",
 };
 
 export default function RootLayout({
@@ -38,7 +38,7 @@ export default function RootLayout({
         <div className="app-powered">Powered by VLAH ENTERPRISE</div>
         <div className="app-language" aria-hidden="true">
           <span>SR</span>
-          <span className="text-white/45">Workspace</span>
+          <span className="text-white/45">Operativa</span>
         </div>
         <div className="app-layer">{children}</div>
       </body>

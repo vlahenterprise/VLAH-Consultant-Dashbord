@@ -141,7 +141,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
     <AppShell>
       <main className="grid gap-6">
         <SectionCard
-          eyebrow="Client profile"
+          eyebrow="Klijent"
           title={client.name}
           description={`${client.company} / ${client.city} / ${client.email}`}
         >
@@ -199,9 +199,9 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
-                  <p className="text-sm text-muted">Meeting load</p>
+                  <p className="text-sm text-muted">Sastanci</p>
                   <p className="mt-2 font-semibold text-foreground">
-                    {meetingLoad.total} / target {client.meetingAverageTarget}
+                    {meetingLoad.total} / norma {client.meetingAverageTarget}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
@@ -214,13 +214,13 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
-                  <p className="text-sm text-muted">AI coverage</p>
+                  <p className="text-sm text-muted">Izvestaji</p>
                   <p className="mt-2 font-semibold text-foreground">
                     {aiCoverage}%
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
-                  <p className="text-sm text-muted">Client on-time</p>
+                  <p className="text-sm text-muted">Dolazak na vreme</p>
                   <p className="mt-2 font-semibold text-foreground">
                     {onTimeRate}%
                   </p>
@@ -284,14 +284,14 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
 
         {playbook ? (
           <SectionCard
-            eyebrow="Operating model"
+            eyebrow="Program"
             title={playbook.title}
-            description="Ovaj blok vise nije genericki CRM opis, nego tacan operativni nacin rada za program ovog klijenta."
+            description="Tok rada, odgovorni ljudi i sastanci za ovaj program."
           >
             <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
               <div className="brand-item p-5">
                 <p className="text-sm font-semibold text-foreground">
-                  Kako rad sa ovim klijentom treba da izgleda
+                  Tok rada
                 </p>
                 <p className="mt-3 text-sm leading-7 text-muted">
                   {playbook.deliveryModel}
@@ -373,9 +373,9 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
         ) : null}
 
         <SectionCard
-          eyebrow="Journey"
-          title="Automatski generisan put klijenta kroz program"
-          description="Journey i dalje dolazi iz programskih settings-a, ali sada je direktno uskladjen sa Master Mind i BDP pravilima."
+          eyebrow="Plan"
+          title="Put kroz program"
+          description="Faze rada i ocekivani ishod po fazi."
         >
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
             {journey.map((step) => (
@@ -411,9 +411,9 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
 
         <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <SectionCard
-            eyebrow="Meetings"
+            eyebrow="Sastanci"
             title="Istorija sastanaka"
-            description="Svaki sastanak sada cuva pun operativni trag: planirano i stvarno vreme, punctuality, AI summary i drive lokacije."
+            description="Vreme, prisustvo, trajanje, izvestaj, akcije i Drive linkovi."
           >
             <div className="grid gap-4">
               {client.meetings.map((meeting) => (
@@ -433,7 +433,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                         tone={getMeetingTone(meeting.status)}
                       />
                       <StatusChip
-                        label={meeting.clientOnTime ? "On time" : "Kasnio"}
+                        label={meeting.clientOnTime ? "Na vreme" : "Kasnio"}
                         tone={meeting.clientOnTime ? "success" : "warning"}
                       />
                       <StatusChip
@@ -500,13 +500,13 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                   <div className="mt-5 flex flex-wrap gap-2">
                     <StatusChip
                       label={
-                        meeting.emailSentToClient ? "Email sent" : "Email pending"
+                        meeting.emailSentToClient ? "Email poslat" : "Email ceka"
                       }
                       tone={meeting.emailSentToClient ? "success" : "warning"}
                     />
                     <StatusChip
                       label={
-                        meeting.aiSummaryReady ? "AI summary ready" : "AI pending"
+                        meeting.aiSummaryReady ? "Izvestaj spreman" : "Izvestaj ceka"
                       }
                       tone={meeting.aiSummaryReady ? "info" : "neutral"}
                     />
@@ -514,7 +514,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
 
                   <div className="mt-5">
                     <p className="text-sm font-semibold text-foreground">
-                      Action items
+                      Akcije
                     </p>
                     <div className="mt-3 grid gap-3">
                       {meeting.actions.length ? (
@@ -535,9 +535,9 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
 
           <div className="grid gap-6">
             <SectionCard
-              eyebrow="Compliance"
-              title="Sta je ispraceno na sastancima"
-              description="Za ovaj program merimo i odrzane sastanke, kasnjenja, overrun, email slanje i AI obradu."
+              eyebrow="Evidencija"
+              title="Kontrola sastanaka"
+              description="Odrzano, kasnjenje, produzenje, email i izvestaj."
             >
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="rounded-[24px] border border-border bg-panel-strong p-5">
@@ -547,7 +547,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-border bg-panel-strong p-5">
-                  <p className="text-sm text-muted">Follow-up potrebni</p>
+                  <p className="text-sm text-muted">Potreban follow-up</p>
                   <p className="mt-2 text-xl font-semibold text-foreground">
                     {complianceStats.followUp}
                   </p>
@@ -571,7 +571,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-border bg-panel-strong p-5">
-                  <p className="text-sm text-muted">AI summary spreman</p>
+                  <p className="text-sm text-muted">Izvestaj spreman</p>
                   <p className="mt-2 text-xl font-semibold text-foreground">
                     {complianceStats.aiReady}
                   </p>
@@ -580,9 +580,9 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
             </SectionCard>
 
             <SectionCard
-              eyebrow="Documentation"
+              eyebrow="Dokumenti"
               title="Drive, dokumenti i jedinstvena akciona tabla"
-              description="Ovde su podeljeni folderi, dokumentacija i taskovi koji ostaju vidljivi timu i klijentu, bez generickog CRM sloja."
+              description="Materijali, snimci, dokumenti i taskovi za klijenta."
             >
               <div className="grid gap-4">
                 <div className="rounded-[24px] border border-border bg-panel-strong p-5">
@@ -644,7 +644,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                 <div className="rounded-[24px] border border-border bg-panel-strong p-5">
                   <p className="text-sm font-semibold text-foreground">
                     {client.sharedActionBoard.length
-                      ? "Shared action board"
+                      ? "Zajednicka action lista"
                       : "Akciona tabla za klijenta"}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-muted">
@@ -666,9 +666,9 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
             </SectionCard>
 
             <SectionCard
-              eyebrow="AI workflow"
-              title="Demo summary generator"
-              description="Ovaj ekran pokazuje kako ce kasnije srpski audio sa sastanka da zavrsi u strukturisanim beleznicama."
+              eyebrow="Izvestaj"
+              title="Generator izvestaja"
+              description="Srpski transkript sastanka pretvara se u kratak izvestaj i akcije."
             >
               <MeetingSummaryGenerator
                 clientName={client.name}

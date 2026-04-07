@@ -7,8 +7,8 @@ export default function NotFound() {
     <AppShell>
       <SectionCard
         eyebrow="404"
-        title="Taj klijent ne postoji u demo bazi"
-        description="Vrati se na listu klijenata i izaberi neki od profila koji su trenutno ucitani u prototype."
+        title="Klijent nije pronadjen"
+        description="Vrati se na bazu klijenata i izaberi postojeci profil."
       >
         <Link
           href="/clients"

@@ -190,41 +190,41 @@ export function getNavigationForActor(
 ): NavigationItem[] {
   if (actor.kind === "client") {
     return [
-      { group: "work", label: "Dashboard", href: `/workspace/${actor.id}` },
+      { group: "work", label: "Pregled", href: `/workspace/${actor.id}` },
       {
         group: "work",
-        label: "Meetings",
+        label: "Sastanci",
         href: `/workspace/${actor.id}/meetings`,
       },
       {
         group: "personal",
-        label: "Analytics",
+        label: "Analitika",
         href: `/workspace/${actor.id}/analytics`,
       },
       {
         group: "personal",
-        label: "Resources",
+        label: "Materijali",
         href: `/workspace/${actor.id}/resources`,
       },
     ];
   }
 
   const items: NavigationItem[] = [
-    { group: "work", label: "Dashboard", href: `/workspace/${actor.id}` },
+    { group: "work", label: "Pregled", href: `/workspace/${actor.id}` },
     {
       group: "work",
-      label: "Clients",
+      label: "Klijenti",
       href: `/workspace/${actor.id}/clients`,
       badge: String(getVisibleClientsForActor(data, actor).length),
     },
     {
       group: "work",
-      label: "Analytics",
+      label: "Analitika",
       href: `/workspace/${actor.id}/analytics`,
     },
     {
       group: "personal",
-      label: "Programs",
+      label: "Programi",
       href: `/workspace/${actor.id}/programs`,
       badge: String(data.programs.length),
     },
@@ -233,7 +233,7 @@ export function getNavigationForActor(
   if (actor.role === "manager") {
     items.push({
       group: "personal",
-      label: "Team",
+      label: "Tim",
       href: `/workspace/${actor.id}/team`,
       badge: String(getManagedConsultants(data, actor.id).length),
     });
@@ -242,7 +242,7 @@ export function getNavigationForActor(
   if (actor.adminAddon) {
     items.push({
       group: "admin",
-      label: "Admin",
+      label: "Setup",
       href: `/workspace/${actor.id}/admin`,
       badge: "ADD-ON",
     });

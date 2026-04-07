@@ -12,26 +12,25 @@ export default async function Home() {
   return (
     <AppShell>
       <SectionCard
-        eyebrow="Brand-aligned MVP"
-        title="Consultant CRM po istom VLAH dark premium sistemu"
-        description="Aplikacija sada vise nije genericki CRM demo, nego operativni sloj za stvarni Master Mind i BDP proces koji si definisao."
+        eyebrow="Ulaz u sistem"
+        title="VLAH Consultant Hub"
+        description="Jedan tok za interne konsultante i menadzere, drugi za klijente. Sve je organizovano oko Master Mind i BDP rada."
       >
         <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="brand-item p-5">
             <div className="flex flex-wrap gap-2">
-              <StatusChip label="Consultant" tone="accent" />
-              <StatusChip label="Manager" tone="warning" />
-              <StatusChip label="Admin add-on" tone="info" />
-              <StatusChip label="Client portal" tone="success" />
+              <StatusChip label="Konsultant" tone="accent" />
+              <StatusChip label="Menadzer" tone="warning" />
+              <StatusChip label="Admin pristup" tone="info" />
+              <StatusChip label="Portal klijenta" tone="success" />
             </div>
             <p className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
-              Imamo odvojene tokove za admin, manager, consultant i client portal sa pravilima rada po programu.
+              Izaberi ulogu, udji u svoj prostor i radi kroz jasan program, sastanke i akcije.
             </p>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-muted">
-              Manager moze da prebacuje klijente sa konsultanta na konsultanta.
-              Admin je add-on permission koji se daje consultant-u ili
-              manager-u i otvara settings/program/admin zonu, ali sam po sebi ne
-              daje transfer pravo.
+              Konsultant vidi svoje klijente. Menadzer vidi tim i raspodelu.
+              Admin pristup otvara setup, import i integracije. Klijent vidi samo
+              svoju karticu, sastanke, materijale i akcije.
             </p>
 
             <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -55,26 +54,27 @@ export default async function Home() {
 
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/login/staff" className="brand-button">
-                Login za zaposlene
+                Ulaz za zaposlene
               </Link>
               <Link href="/login/client" className="brand-button-secondary">
-                Login za klijente
+                Ulaz za klijente
+              </Link>
+              <Link href="/clients" className="brand-button-secondary">
+                Baza klijenata
               </Link>
             </div>
           </div>
 
           <div className="brand-item p-5">
             <p className="text-sm font-semibold text-foreground">
-              Sta je sada ukljuceno
+              Kako se krecemo kroz aplikaciju
             </p>
             <div className="mt-4 space-y-3 text-sm leading-6 text-muted">
-              <p>- Public landing, staff login i client login.</p>
-              <p>- Role-based workspace za consultant, manager i client portal.</p>
-              <p>- Tacni Master Mind i BDP operativni playbook-ovi sa meeting tokovima.</p>
-              <p>- Admin setup za integracije, onboarding, assignments i Excel import.</p>
-              <p>- User dashboard analytics i client dashboard analytics.</p>
-              <p>- Meeting compliance: prisustvo, start/end, punctuality, overrun i Drive evidencija.</p>
-              <p>- Zoom, Thinkific, email, Drive i OpenAI su pripremljeni kao konkretan setup sloj.</p>
+              <p>1. Zaposleni ulazi u svoj workspace.</p>
+              <p>2. Menadzer prati tim, raspodelu i klijente pod rizikom.</p>
+              <p>3. Admin uredjuje setup: programi, ljudi, import i integracije.</p>
+              <p>4. Klijent vidi samo svoju karticu, sastanke, materijale i akcije.</p>
+              <p>5. Sastanci cuvaju vreme, prisustvo, snimke, izvestaj i dogovorene taskove.</p>
             </div>
           </div>
         </div>
@@ -82,9 +82,9 @@ export default async function Home() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <SectionCard
-          eyebrow="Demo access"
-          title="Brzi ulaz za zaposlene"
-          description="Mock login dok ne uvedemo pravi auth."
+          eyebrow="Zaposleni"
+          title="Izaberi interni profil"
+          description="Privremeni ulaz dok ne ukljucimo pravu autentikaciju."
         >
           <div className="grid gap-3">
             {data.staffUsers.map((user) => (
@@ -101,11 +101,11 @@ export default async function Home() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <StatusChip
-                    label={user.role === "manager" ? "Manager" : "Consultant"}
+                    label={user.role === "manager" ? "Menadzer" : "Konsultant"}
                     tone="accent"
                   />
                   {user.adminAddon ? (
-                    <StatusChip label="Admin add-on" tone="info" />
+                    <StatusChip label="Admin pristup" tone="info" />
                   ) : null}
                 </div>
               </Link>
@@ -114,9 +114,9 @@ export default async function Home() {
         </SectionCard>
 
         <SectionCard
-          eyebrow="Client access"
-          title="Brzi ulaz za klijente"
-          description="Poseban dashboard sa analytics, dokumentacijom i istorijom sastanaka."
+          eyebrow="Klijenti"
+          title="Izaberi portal klijenta"
+          description="Klijent vidi samo svoj program, sastanke, materijale i akcije."
         >
           <div className="grid gap-3">
             {data.clientPortalUsers.map((user) => (
@@ -129,7 +129,7 @@ export default async function Home() {
                   <p className="font-semibold text-foreground">{user.name}</p>
                   <p className="text-sm text-muted">{user.company}</p>
                 </div>
-                <StatusChip label="Client portal" tone="success" />
+                <StatusChip label="Portal klijenta" tone="success" />
               </Link>
             ))}
           </div>

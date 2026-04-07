@@ -38,7 +38,7 @@ export function MeetingSummaryGenerator({
       });
 
       if (!response.ok) {
-        throw new Error("Nije uspelo generisanje summary-ja.");
+        throw new Error("Nije uspelo generisanje izvestaja.");
       }
 
       const payload = (await response.json()) as SummaryResult;
@@ -60,14 +60,13 @@ export function MeetingSummaryGenerator({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-foreground">
-              Demo input za AI summary
+              Transkript sastanka
             </h3>
             <p className="mt-1 text-sm leading-6 text-muted">
-              Za sada simuliramo transcript. Sledeci korak je upload audio fajla
-              i pravi OpenAI pipeline nad sastankom.
+              Unesi ili nalepi tekst razgovora da dobijes strukturisan izvestaj.
             </p>
           </div>
-          <StatusChip label="Demo flow" tone="accent" />
+          <StatusChip label="Izvestaj" tone="accent" />
         </div>
 
         <textarea
@@ -75,7 +74,7 @@ export function MeetingSummaryGenerator({
           onChange={(event) => setTranscript(event.target.value)}
           rows={10}
           className="brand-input mt-4 min-h-[240px] resize-y"
-          placeholder="Unesi transcript sa sastanka..."
+          placeholder="Unesi transkript sa sastanka..."
         />
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -85,7 +84,7 @@ export function MeetingSummaryGenerator({
             disabled={loading || !transcript.trim()}
             className="brand-button disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Generisem summary..." : "Generisi AI summary"}
+            {loading ? "Generisem..." : "Generisi izvestaj"}
           </button>
           {error ? <p className="text-sm text-red-300">{error}</p> : null}
         </div>
@@ -100,7 +99,7 @@ export function MeetingSummaryGenerator({
             </p>
           </div>
           <StatusChip
-            label={result ? "Spremno" : "Ceka input"}
+            label={result ? "Spremno" : "Ceka tekst"}
             tone={result ? "success" : "neutral"}
           />
         </div>
@@ -109,7 +108,7 @@ export function MeetingSummaryGenerator({
           <div className="mt-4 space-y-4 text-sm leading-6">
             <div>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#ff946d]">
-                Kratak overview
+                Kratak pregled
               </p>
               <p className="mt-2 text-foreground">{result.overview}</p>
             </div>
@@ -125,7 +124,7 @@ export function MeetingSummaryGenerator({
             </div>
             <div>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#ff946d]">
-                Action items
+                Akcije
               </p>
               <ul className="mt-2 space-y-2 text-muted">
                 {result.actionItems.map((item) => (
@@ -152,8 +151,7 @@ export function MeetingSummaryGenerator({
           </div>
         ) : (
           <div className="mt-4 rounded-[20px] border border-white/8 bg-white/4 p-4 text-sm text-muted">
-            Kada kliknes na dugme levo, dobijas strukturirani summary spreman za
-            meeting notes i CRM bazu.
+            Kada kliknes na dugme levo, dobijas pregled, kljucne tacke, rizike i akcije.
           </div>
         )}
       </div>

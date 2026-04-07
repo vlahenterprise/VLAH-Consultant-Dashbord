@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
-import { getClientById, loadAppData } from "@/lib/app-data";
+import { getClientById, getProgramById, loadAppData } from "@/lib/app-data";
 
 export const dynamic = "force-dynamic";
 
@@ -13,35 +13,35 @@ export default async function ClientLoginPage() {
     <AppShell>
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <SectionCard
-          eyebrow="Client login"
+          eyebrow="Klijenti"
           title="Poseban portal za klijente"
-          description="Klijent dobija sopstveni dashboard sa analytics, dokumentacijom i sastancima."
+          description="Klijent vidi samo svoju karticu, sastanke, akcije i materijale."
         >
           <div className="grid gap-4">
-            <input className="brand-input" placeholder="Client email" />
+            <input className="brand-input" placeholder="Email klijenta" />
             <input
               className="brand-input"
               placeholder="Lozinka"
               type="password"
             />
             <button type="button" className="brand-button">
-              Demo login
+              Nastavi
             </button>
             <p className="text-sm text-muted">
-              Kasnije ide poseban auth flow i ogranicen pristup samo njihovim
-              podacima i materijalima.
+              Trenutno koristi kartice desno za ulaz. Svaki portal je odvojen po klijentu.
             </p>
           </div>
         </SectionCard>
 
         <SectionCard
-          eyebrow="Quick access"
-          title="Izaberi demo klijenta"
-          description="Svaki klijent ima svoj dashboard, naredne sastanke, action items i deljene resurse."
+          eyebrow="Portali"
+          title="Izaberi klijenta"
+          description="Svaki klijent ulazi samo u svoj program i svoje zadatke."
         >
           <div className="grid gap-3">
             {data.clientPortalUsers.map((user) => {
               const client = getClientById(data, user.clientId);
+              const program = client ? getProgramById(data, client.programId) : null;
 
               return (
                 <Link
@@ -55,11 +55,11 @@ export default async function ClientLoginPage() {
                     </p>
                     <p className="text-sm text-muted">{user.company}</p>
                     <p className="mt-1 text-sm text-muted">
-                      Program: {client ? client.programId : "n/a"}
+                      Program: {program?.name ?? "nije povezano"}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <StatusChip label="Client portal" tone="success" />
+                    <StatusChip label="Portal klijenta" tone="success" />
                     {client ? (
                       <StatusChip label={client.stage} tone="neutral" />
                     ) : null}

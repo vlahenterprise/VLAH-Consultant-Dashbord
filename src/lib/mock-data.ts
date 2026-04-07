@@ -19,11 +19,11 @@ export const programs: Program[] = [
     cadence:
       "Prvi zajednicki sastanak 60 min, zatim odvojeni 1:1 ciklusi po modulu do zavrsetka.",
     durationWeeks: 12,
-    meetingTarget: "Target je da prosek ne prelazi 4 sastanka po klijentu.",
+    meetingTarget: "Norma je da prosek ne prelazi 4 sastanka po klijentu.",
     workflowNotes: [
       "Kickoff je zajednicki i na njemu su i profitability i organization ekspert.",
       "Posle kickoff-a rad se razdvaja po modulima do zavrsetka.",
-      "Svaki sastanak ima Zoom zapis, dokumentaciju, drive lokacije i email summary.",
+      "Svaki sastanak ima Zoom zapis, dokumentaciju, Drive lokacije i email izvestaj.",
     ],
     phases: [
       {
@@ -66,8 +66,8 @@ export const programs: Program[] = [
     workflowNotes: [
       "Operations, Finance i HR rade zajedno sa klijentom na mesecnom kickoff-u.",
       "Na kraju meseca svaki ekspert radi svoj 1:1 review i upisuje izvestaj.",
-      "BDP ima shared action listu za klijenta i email reminder-e za taskove.",
-      "Izvestaj sastanka se pravi iz srpskog audio transkripta preko OpenAI flow-a.",
+      "BDP ima zajednicku action listu za klijenta i email reminder-e za taskove.",
+      "Izvestaj sastanka se pravi iz srpskog audio transkripta kroz tok za izvestaje.",
     ],
     phases: [
       {
@@ -220,7 +220,7 @@ export const staffUsers: StaffUser[] = [
     adminAddon: true,
     team: "Operations Leadership",
     focus: "Program setup, access control i admin konfiguracija",
-    specialties: ["Management", "Admin"],
+    specialties: ["Menadzment", "Administracija"],
     nextAvailableSlot: "2026-04-05T12:00:00+02:00",
     activeClientIds: [],
     directReportIds: [
@@ -671,7 +671,7 @@ export const clients: Client[] = [
     },
     revenueSnapshot: "5.1M RSD",
     nextMilestone:
-      "Zatvoriti shared action listu i poslati summary posle sva tri individualna follow-up sastanka.",
+      "Zatvoriti zajednicku action listu i poslati izvestaj posle sva tri individualna follow-up sastanka.",
     sharedActionBoard: [
       {
         id: "bdp-marija-task-1",
@@ -745,9 +745,9 @@ export const clients: Client[] = [
         emailSentToClient: true,
         aiSummaryReady: true,
         summary:
-          "Zajednicki BDP kickoff sa sva tri eksperta. Napravljen je mesecni plan i otvorena shared action lista.",
+          "Zajednicki BDP kickoff sa sva tri eksperta. Napravljen je mesecni plan i otvorena zajednicka action lista.",
         transcriptPreview:
-          "Na BDP 3 na 1 sastanku prosli smo Operations, Finance i HR. Dogovorene su mesecne akcije, otvorena je shared action lista i definisani su pojedinacni kraj-meseca follow-up sastanci. Izvestaj ide klijentu odmah nakon sastanka.",
+          "Na BDP 3 na 1 sastanku prosli smo Operations, Finance i HR. Dogovorene su mesecne akcije, otvorena je zajednicka action lista i definisani su pojedinacni kraj-meseca follow-up sastanci. Izvestaj ide klijentu odmah nakon sastanka.",
         recording: {
           videoUrl: "#video-marija-kickoff",
           audioUrl: "#audio-marija-kickoff",
@@ -761,7 +761,7 @@ export const clients: Client[] = [
         actions: [
           {
             id: "act-marija-kickoff-1",
-            title: "Otvoriti shared action listu i podeliti je sa klijentom",
+            title: "Otvoriti zajednicku action listu i podeliti je sa klijentom",
             owner: "Konsultant",
             dueDate: "2026-03-10T18:00:00+01:00",
             done: true,
@@ -832,7 +832,7 @@ export const clients: Client[] = [
         overran: false,
         emailSentToClient: false,
         aiSummaryReady: false,
-        summary: "Operations review i zatvaranje taskova sa shared action liste.",
+        summary: "Operations review i zatvaranje taskova sa zajednicke action liste.",
         transcriptPreview: "",
         recording: {
           videoUrl: "#video-marija-ops-next",
@@ -862,7 +862,7 @@ export const clients: Client[] = [
     riskLevel: "Visok",
     monthlyGoal: "Stabilizovati operations, cash disciplinu i HR ownership.",
     notes:
-      "BDP klijent sa rizikom jer shared action lista kasni i operations tok trazi jaci follow-up.",
+      "BDP klijent sa rizikom jer zajednicka action lista kasni i operations tok trazi jaci follow-up.",
     tags: ["BDP", "Operations", "Finance", "HR & Leadership"],
     programId: "bdp",
     consultantId: "marko-ristic",
@@ -925,8 +925,8 @@ export const clients: Client[] = [
     documents: [
       {
         id: "doc-stefan-bdp-board",
-        name: "BDP shared action board",
-        type: "Shared board",
+        name: "BDP zajednicka action lista",
+        type: "Action lista",
         status: "Kasni update",
         lastUpdated: "2026-03-22T10:00:00+01:00",
         owner: "Ivana Markovic",
@@ -934,7 +934,7 @@ export const clients: Client[] = [
       {
         id: "doc-stefan-ops",
         name: "Operations scorecard",
-        type: "Dashboard",
+        type: "Pregled",
         status: "Kasni update",
         lastUpdated: "2026-03-12T10:00:00+01:00",
         owner: "Marko Ristic",
@@ -971,7 +971,7 @@ export const clients: Client[] = [
         emailSentToClient: true,
         aiSummaryReady: true,
         summary:
-          "Mesecni BDP kickoff, otvorena shared action lista i definisani pojedinacni review sastanci.",
+          "Mesecni BDP kickoff, otvorena zajednicka action lista i definisani pojedinacni review sastanci.",
         transcriptPreview:
           "Na 3 na 1 kickoff-u prosli smo operations, finance i HR. Stefan kasni sa ownership disciplinom pa smo otvorili task board, reminder pravila i termine za individualne review-e.",
         recording: {
@@ -987,7 +987,7 @@ export const clients: Client[] = [
         actions: [
           {
             id: "act-stefan-kickoff-1",
-            title: "Podeliti summary sastanka i otvoriti reminder tok",
+            title: "Podeliti izvestaj sastanka i otvoriti reminder tok",
             owner: "Konsultant",
             dueDate: "2026-03-03T17:00:00+01:00",
             done: true,
@@ -1015,7 +1015,7 @@ export const clients: Client[] = [
         emailSentToClient: true,
         aiSummaryReady: true,
         summary:
-          "Operations review sa fokusom na scorecard i task ownership. Shared action lista nije azurirana na vreme.",
+          "Operations review sa fokusom na scorecard i vlasnistvo nad taskovima. Zajednicka action lista nije azurirana na vreme.",
         transcriptPreview:
           "Na operations review-u smo videli da scorecard nije azuriran i da taskovi kasne. Dogovoreno je da klijent delegira update timu i da reminder mailovi idu pre roka i kada task ode u overdue.",
         recording: {
@@ -1084,7 +1084,7 @@ export const clientPortalUsers: ClientPortalUser[] = [
     name: "Nikola Jovanovic",
     email: "nikola@fitlab.rs",
     company: "FitLab Academy",
-    portalLabel: "Client dashboard",
+    portalLabel: "Portal klijenta",
   },
   {
     kind: "client",
@@ -1093,7 +1093,7 @@ export const clientPortalUsers: ClientPortalUser[] = [
     name: "Marija Ilic",
     email: "marija@studioforma.rs",
     company: "Studio Forma",
-    portalLabel: "Client dashboard",
+    portalLabel: "Portal klijenta",
   },
   {
     kind: "client",
@@ -1102,7 +1102,7 @@ export const clientPortalUsers: ClientPortalUser[] = [
     name: "Stefan Pavlov",
     email: "stefan@dentalpro.rs",
     company: "Dental Pro Center",
-    portalLabel: "Client dashboard",
+    portalLabel: "Portal klijenta",
   },
 ];
 
@@ -1208,41 +1208,41 @@ export function canTransferClients(actor: WorkspaceActor) {
 export function getNavigationForActor(actor: WorkspaceActor): NavigationItem[] {
   if (actor.kind === "client") {
     return [
-      { group: "work", label: "Dashboard", href: `/workspace/${actor.id}` },
+      { group: "work", label: "Pregled", href: `/workspace/${actor.id}` },
       {
         group: "work",
-        label: "Meetings",
+        label: "Sastanci",
         href: `/workspace/${actor.id}/meetings`,
       },
       {
         group: "personal",
-        label: "Analytics",
+        label: "Analitika",
         href: `/workspace/${actor.id}/analytics`,
       },
       {
         group: "personal",
-        label: "Resources",
+        label: "Materijali",
         href: `/workspace/${actor.id}/resources`,
       },
     ];
   }
 
   const items: NavigationItem[] = [
-    { group: "work", label: "Dashboard", href: `/workspace/${actor.id}` },
+    { group: "work", label: "Pregled", href: `/workspace/${actor.id}` },
     {
       group: "work",
-      label: "Clients",
+      label: "Klijenti",
       href: `/workspace/${actor.id}/clients`,
       badge: String(getVisibleClientsForActor(actor).length),
     },
     {
       group: "work",
-      label: "Analytics",
+      label: "Analitika",
       href: `/workspace/${actor.id}/analytics`,
     },
     {
       group: "personal",
-      label: "Programs",
+      label: "Programi",
       href: `/workspace/${actor.id}/programs`,
       badge: String(programs.length),
     },
@@ -1251,7 +1251,7 @@ export function getNavigationForActor(actor: WorkspaceActor): NavigationItem[] {
   if (actor.role === "manager") {
     items.push({
       group: "personal",
-      label: "Team",
+      label: "Tim",
       href: `/workspace/${actor.id}/team`,
       badge: String(getManagedConsultants(actor.id).length),
     });
@@ -1260,7 +1260,7 @@ export function getNavigationForActor(actor: WorkspaceActor): NavigationItem[] {
   if (actor.adminAddon) {
     items.push({
       group: "admin",
-      label: "Admin",
+      label: "Setup",
       href: `/workspace/${actor.id}/admin`,
       badge: "ADD-ON",
     });

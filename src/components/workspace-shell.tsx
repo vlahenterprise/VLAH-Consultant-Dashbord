@@ -23,19 +23,27 @@ import {
 
 const iconByLabel = {
   Dashboard: IconHome,
+  Pregled: IconHome,
   Clients: IconUsers,
+  Klijenti: IconUsers,
   Analytics: IconChart,
+  Analitika: IconChart,
   Programs: IconSparkles,
+  Programi: IconSparkles,
   Team: IconSwap,
+  Tim: IconSwap,
   Admin: IconSettings,
+  Setup: IconSettings,
   Meetings: IconCalendar,
+  Sastanci: IconCalendar,
   Resources: IconFolder,
+  Materijali: IconFolder,
 } as const;
 
 const groupTitles = {
   work: "Rad",
-  personal: "Licno",
-  admin: "Admin",
+  personal: "Pregled",
+  admin: "Setup",
 } as const;
 
 export function WorkspaceShell({
@@ -76,7 +84,9 @@ export function WorkspaceShell({
                 {actor.kind === "client" ? actor.company : actor.name}
               </p>
               <p className="text-xs uppercase tracking-[0.16em] text-muted">
-                {actor.kind === "client" ? actor.portalLabel : actor.team}
+                {actor.kind === "client"
+                  ? actor.portalLabel.replace("dashboard", "portal")
+                  : actor.team}
               </p>
             </div>
           </div>
@@ -84,7 +94,7 @@ export function WorkspaceShell({
           <div className="space-y-3">
             <div className="brand-item px-4 py-4">
               <p className="text-xs uppercase tracking-[0.16em] text-muted">
-                Aktivna sesija
+                Trenutna uloga
               </p>
               <p className="mt-2 text-lg font-semibold text-foreground">
                 {actor.name}
@@ -94,27 +104,27 @@ export function WorkspaceShell({
                   <>
                     <StatusChip
                       label={
-                        actor.role === "manager" ? "Manager" : "Consultant"
+                        actor.role === "manager" ? "Menadzer" : "Konsultant"
                       }
                       tone="accent"
                     />
                     {actor.adminAddon ? (
-                      <StatusChip label="Admin add-on" tone="info" />
+                      <StatusChip label="Admin pristup" tone="info" />
                     ) : null}
                   </>
                 ) : (
-                  <StatusChip label="Client portal" tone="info" />
+                  <StatusChip label="Portal klijenta" tone="info" />
                 )}
               </div>
             </div>
 
             {actor.kind === "staff" ? (
               <div className="brand-item px-4 py-4 text-sm text-muted">
-                <p>{canTransferClients(actor) ? "Manager moze da prebacuje klijente izmedju konsultanata." : "Ovaj korisnik nema transfer prava."}</p>
+                <p>{canTransferClients(actor) ? "Ima pravo za raspodelu klijenata." : "Nema pravo za transfer klijenata."}</p>
                 <p className="mt-2">
                   {canAccessAdmin(actor)
-                    ? "Admin add-on otvara settings, programe i integracije."
-                    : "Admin deo je zatvoren dok se add-on ne dodeli."}
+                    ? "Ima pristup setup-u i integracijama."
+                    : "Setup je sakriven bez admin add-on-a."}
                 </p>
               </div>
             ) : null}
@@ -159,10 +169,10 @@ export function WorkspaceShell({
 
           <div className="mt-auto grid gap-2">
             <Link href="/login/staff" className="brand-button-secondary">
-              Staff login
+              Zaposleni
             </Link>
             <Link href="/login/client" className="brand-button-secondary">
-              Client login
+              Klijenti
             </Link>
           </div>
         </div>

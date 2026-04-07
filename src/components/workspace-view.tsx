@@ -254,9 +254,9 @@ function StaffOverview({
   return (
     <>
       <SectionCard
-        eyebrow="Workspace"
-        title={`${actor.name} dashboard`}
-        description="Sada je dashboard vezan za stvarni Master Mind i BDP nacin rada, sa modulima, shared task board-om i meeting compliance signalima."
+        eyebrow="Pregled"
+        title={actor.name}
+        description="Portfolio, sastanci i akcije koje ova uloga treba da prati."
       >
         <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="brand-item p-5">
@@ -264,11 +264,11 @@ function StaffOverview({
               <div>
                 <div className="flex flex-wrap gap-2">
                   <StatusChip
-                    label={actor.role === "manager" ? "Manager" : "Consultant"}
+                    label={actor.role === "manager" ? "Menadzer" : "Konsultant"}
                     tone="accent"
                   />
                   {actor.adminAddon ? (
-                    <StatusChip label="Admin add-on" tone="info" />
+                    <StatusChip label="Admin pristup" tone="info" />
                   ) : null}
                   {actor.specialties.map((specialty) => (
                     <StatusChip key={specialty} label={specialty} tone="neutral" />
@@ -282,7 +282,7 @@ function StaffOverview({
                 </p>
               </div>
               <div className="rounded-[20px] border border-white/10 bg-white/4 px-4 py-3 text-sm text-muted">
-                <p>Sledeci slobodan slot</p>
+                <p>Sledeci slobodan termin</p>
                 <p className="mt-2 font-semibold text-foreground">
                   {formatDateTime(actor.nextAvailableSlot)}
                 </p>
@@ -301,9 +301,9 @@ function StaffOverview({
                 hint="ove nedelje"
               />
               <MetricCard
-                label="AI summaries"
+                label="Izvestaji"
                 value={String(pendingAiSummaries)}
-                hint="cekaju transcript/sumarizaciju"
+                hint="cekaju obradu"
               />
               <MetricCard
                 label="Utilizacija"
@@ -315,26 +315,24 @@ function StaffOverview({
 
           <div className="brand-item p-5">
             <p className="text-sm font-semibold text-foreground">
-              Pravila pristupa i operativni tok
+              Sta ova uloga moze
             </p>
             <div className="mt-4 space-y-3 text-sm leading-6 text-muted">
               <p>
                 {actor.role === "manager"
-                  ? "Manager vidi portfolio celog tima i jedini moze da prebaci klijenta sa konsultanta na konsultanta."
-                  : "Consultant vidi samo klijente na kojima je dodeljen makar jedan modul i unosi sastanke, izvestaje i drive linkove."}
+                  ? "Vidi timski portfolio i moze da prebacuje klijente."
+                  : "Vidi dodeljene klijente i unosi sastanke, izvestaje i linkove."}
               </p>
               <p>
-                Master Mind pocinje zajednickim kickoff-om od 60 min, a zatim se
-                rad deli na Profitabilnost i Organizaciju.
+                Master Mind: zajednicki kickoff, zatim Profitabilnost i Organizacija odvojeno.
               </p>
               <p>
-                BDP koristi mesecni 3:1 kickoff sa shared action board-om, reminder
-                email-ovima i OpenAI summary flow-om iz srpskog audio transkripta.
+                BDP: mesecni 3:1, tri 1:1 sastanka i jedna zajednicka action lista.
               </p>
               <p>
                 {actor.adminAddon
-                  ? "Admin add-on ovde otvara program settings, AI/storage i access konfiguraciju."
-                  : "Admin zona ostaje skrivena dok se add-on eksplicitno ne dodeli."}
+                  ? "Setup je otkljucan za programe, integracije i import."
+                  : "Setup nije dostupan bez admin add-on-a."}
               </p>
             </div>
           </div>
@@ -343,9 +341,9 @@ function StaffOverview({
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
-          eyebrow="Portfolio"
-          title="Klijenti koje ova uloga vidi"
-          description="Svaki profil sada pokazuje module, dodeljene eksperte, meeting target i operativni workflow po programu."
+        eyebrow="Klijenti"
+          title="Vidljivi klijenti"
+          description="Klijenti, program, moduli, eksperti i sledeci sastanak."
         >
           <div className="grid gap-3">
             {visibleClients.map((client) => {
@@ -379,7 +377,7 @@ function StaffOverview({
                     <p>Program: {program?.name}</p>
                     <p>Moduli: {client.programModules.join(" / ")}</p>
                     <p>
-                      Sastanci: {meetingLoad.total} / target {client.meetingAverageTarget}
+                      Sastanci: {meetingLoad.total} / norma {client.meetingAverageTarget}
                     </p>
                     <p>
                       Sledeci sastanak:{" "}
@@ -397,9 +395,9 @@ function StaffOverview({
         </SectionCard>
 
         <SectionCard
-          eyebrow="Focus"
-          title="Sta trazi paznju ove nedelje"
-          description="Objedinjeni signal iz meeting punctuality-ja, AI summary pipeline-a i shared/open taskova."
+          eyebrow="Fokus"
+          title="Fokus ove nedelje"
+          description="Rizik, naredni sastanci i otvorene akcije."
         >
           <div className="grid gap-4">
             <div className="brand-item p-4">
@@ -495,9 +493,9 @@ function StaffClients({
 
   return (
     <SectionCard
-      eyebrow="Client base"
-      title="CRM baza koju ova uloga vidi"
-      description="Pregled je sada vezan za module, dodeljene eksperte, drive lokaciju i meeting normu po klijentu."
+      eyebrow="Klijenti"
+      title="Baza vidljiva ovoj ulozi"
+      description="Klik na klijenta otvara detaljan operativni profil."
     >
       <div className="grid gap-4 lg:grid-cols-2">
         {visibleClients.map((client) => {
@@ -530,18 +528,18 @@ function StaffClients({
 
               <div className="mt-4 grid gap-2 text-sm text-muted md:grid-cols-2">
                 <p>Program: {program?.name}</p>
-                <p>Workflow: {getWorkflowLabel(client)}</p>
+                <p>Tok rada: {getWorkflowLabel(client)}</p>
                 <p>
-                  Sastanci: {meetingLoad.total} / target {client.meetingAverageTarget}
+                  Sastanci: {meetingLoad.total} / norma {client.meetingAverageTarget}
                 </p>
-                <p>Open actions: {openActions.length}</p>
+                <p>Otvorene akcije: {openActions.length}</p>
                 <p>
                   Sledeci sastanak:{" "}
                   {nextMeeting
                     ? formatDateTime(nextMeeting.scheduledStartAt)
                     : "nema"}
                 </p>
-                <p>Drive hub: {client.driveRootUrl.replace("https://", "")}</p>
+                <p>Drive: {client.driveRootUrl.replace("https://", "")}</p>
               </div>
 
               <ExpertAssignments data={data} client={client} />
@@ -589,33 +587,33 @@ function StaffAnalytics({
   return (
     <>
       <SectionCard
-        eyebrow="Analytics"
-        title="User dashboard analytics"
-        description="Analitika sada meri health, action completion, meeting target i koliko je OpenAI summary pipeline spreman po portfoliju."
+        eyebrow="Analitika"
+        title="Portfolio signal"
+        description="Stanje, akcije, ritam sastanaka i obrada izvestaja."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           <MetricCard
-            label="Health"
+            label="Stanje"
             value={formatPercent(avgHealth)}
             hint="preko vidljivih klijenata"
           />
           <MetricCard
-            label="Action completion"
+            label="Zavrsene akcije"
             value={formatPercent(avgActionCompletion)}
             hint="realizacija taskova"
           />
           <MetricCard
-            label="Meeting rhythm"
+            label="Ritam sastanaka"
             value={formatPercent(avgMeetingConsistency)}
             hint="disciplina cadence-a"
           />
           <MetricCard
-            label="AI coverage"
+            label="Izvestaji"
             value={formatPercent(avgAiCoverage)}
-            hint="odrzani sastanci sa summary-jem"
+            hint="sastanci sa izvestajem"
           />
           <MetricCard
-            label="Target fit"
+            label="U okviru norme"
             value={`${clientsWithinTarget}/${visibleClients.length}`}
             hint={`prosecno ${avgMeetingLoad.toFixed(1)} sastanka`}
           />
@@ -624,9 +622,9 @@ function StaffAnalytics({
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
-          eyebrow="Client analytics"
-          title="Health po klijentima"
-          description="Pregled health score-a po svakom klijentu unutar vidljivog portfolija."
+          eyebrow="Klijenti"
+          title="Stanje po klijentima"
+          description="Brz pregled stanja po svakom klijentu."
         >
           <MiniBars
             items={visibleClients.map((client) => ({
@@ -638,9 +636,9 @@ function StaffAnalytics({
         </SectionCard>
 
         <SectionCard
-          eyebrow="Execution"
-          title="Meeting i summary disciplina"
-          description="Poredi broj sastanaka, AI coverage i punctuality signal po klijentu."
+          eyebrow="Izvrsenje"
+          title="Sastanci i izvestaji"
+          description="Norma sastanaka, obrada izvestaja i dolazak na vreme."
         >
           <div className="grid gap-3">
             {visibleClients.map((client) => {
@@ -667,17 +665,17 @@ function StaffAnalytics({
                     <MiniBars
                       items={[
                         {
-                          label: "Meeting target usage",
+                          label: "Koriscenje norme",
                           value: targetRatio,
                           valueLabel: `${meetingLoad.total}/${client.meetingAverageTarget}`,
                         },
                         {
-                          label: "AI summary coverage",
+                          label: "Pokrivenost izvestajima",
                           value: getClientAiSummaryRate(client),
                           valueLabel: formatPercent(getClientAiSummaryRate(client)),
                         },
                         {
-                          label: "Client on-time rate",
+                          label: "Dolazak na vreme",
                           value: getClientOnTimeRate(client),
                           valueLabel: formatPercent(getClientOnTimeRate(client)),
                         },
@@ -697,9 +695,9 @@ function StaffAnalytics({
 function StaffPrograms({ data }: { data: AppData }) {
   return (
     <SectionCard
-      eyebrow="Programs"
-      title="Master Mind i BDP program setup"
-      description="Za sada su modelovana samo ova dva programa, sa tacnim modulima, ritmovima i pravilima rada koje si definisao."
+      eyebrow="Programi"
+      title="Programi"
+      description="Master Mind i BDP pravila rada."
     >
       <div className="grid gap-4 lg:grid-cols-2">
         {data.programs.map((program) => {
@@ -804,9 +802,9 @@ function TeamSection({
 
   return (
     <SectionCard
-      eyebrow="Manager tools"
-      title="Transfer centar i raspodela klijenata"
-      description="Manager moze da prebacuje klijente izmedju konsultanata. Admin add-on to pravo ne daje."
+      eyebrow="Menadzer"
+      title="Raspodela klijenata"
+      description="Menadzer prati opterecenje tima i transfer klijenata."
     >
       <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="brand-item p-5">
@@ -838,7 +836,7 @@ function TeamSection({
                         tone="accent"
                       />
                       {consultant.adminAddon ? (
-                        <StatusChip label="Admin add-on" tone="info" />
+                        <StatusChip label="Admin pristup" tone="info" />
                       ) : null}
                     </div>
                   </div>
@@ -880,7 +878,7 @@ function TeamSection({
 
         <div className="brand-item p-5">
           <p className="text-sm font-semibold text-foreground">
-            Predlozi za prebacivanje klijenata
+                Predlozi za transfer
           </p>
           <div className="mt-4 grid gap-3">
             {data.transferSuggestions.map((transfer) => {
@@ -952,9 +950,9 @@ function AdminSection({
 
   return (
     <SectionCard
-      eyebrow="Admin"
-      title="Admin setup i operativni centar"
-      description="Ovde su sada i integracije, onboarding novih ljudi i klijenata, BDP Excel import i biblioteka meeting template-ova."
+      eyebrow="Setup"
+      title="Setup"
+      description="Programi, ljudi, klijenti, import i integracije na jednom mestu."
     >
       <AdminSetupPanel
         actorName={actor.name}
@@ -997,9 +995,9 @@ function ClientOverview({
   return (
     <>
       <SectionCard
-        eyebrow="Client dashboard"
-        title={`${client.name} portal`}
-        description="Klijent sada vidi svoj program, dodeljene eksperte, shared/open akcije i pregled sastanaka po pravilima Master Mind ili BDP toka."
+        eyebrow="Portal klijenta"
+        title={`Portal: ${client.name}`}
+        description="Program, eksperti, naredni sastanak i otvorene akcije."
       >
         <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="brand-item p-5">
@@ -1032,7 +1030,7 @@ function ClientOverview({
 
             <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <MetricCard
-                label="Health"
+                label="Stanje"
                 value={formatPercent(client.analytics.healthScore)}
                 hint="ukupni program signal"
               />
@@ -1041,17 +1039,17 @@ function ClientOverview({
                 value={String(openActions.length)}
                 hint={
                   client.sharedActionBoard.length
-                    ? "shared action board"
-                    : "meeting follow-up"
+                    ? "zajednicka action lista"
+                    : "follow-up sastanka"
                 }
               />
               <MetricCard
-                label="AI coverage"
+                label="Izvestaji"
                 value={formatPercent(aiCoverage)}
-                hint="odrzani sastanci sa summary-jem"
+                hint="sastanci sa izvestajem"
               />
               <MetricCard
-                label="Punctuality"
+                label="Dolazak na vreme"
                 value={formatPercent(onTimeRate)}
                 hint="dolazak klijenta na vreme"
               />
@@ -1085,9 +1083,9 @@ function ClientOverview({
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
-          eyebrow="Next"
+          eyebrow="Dalje"
           title="Naredni koraci"
-          description="Otvorene akcije, naredni milestone i poslednji summary koji je poslat klijentu."
+          description="Milestone, otvorene akcije i poslednji izvestaj."
         >
           <div className="grid gap-3">
             <div className="brand-item p-4">
@@ -1098,7 +1096,7 @@ function ClientOverview({
                 {client.nextMilestone}
               </p>
               <p className="mt-3 text-sm text-muted">
-                Sastanci: {meetingLoad.total} / target {client.meetingAverageTarget}
+                Sastanci: {meetingLoad.total} / norma {client.meetingAverageTarget}
               </p>
             </div>
 
@@ -1124,24 +1122,24 @@ function ClientOverview({
         <SectionCard
           eyebrow="Program"
           title="Ritam i poslednji sastanak"
-          description="Pregled programa, analytics signala i poslednjeg odrzanog summary-ja."
+          description="Programski ritam i poslednji odrzani sastanak."
         >
           <div className="grid gap-4">
             <div className="brand-item p-4">
               <MiniBars
                 items={[
                   {
-                    label: "Action completion",
+                    label: "Zavrsene akcije",
                     value: client.analytics.actionCompletion,
                     valueLabel: formatPercent(client.analytics.actionCompletion),
                   },
                   {
-                    label: "Meeting consistency",
+                    label: "Ritam sastanaka",
                     value: client.analytics.meetingConsistency,
                     valueLabel: formatPercent(client.analytics.meetingConsistency),
                   },
                   {
-                    label: "Milestone progress",
+                    label: "Napredak faza",
                     value: client.analytics.milestoneProgress,
                     valueLabel: formatPercent(client.analytics.milestoneProgress),
                   },
@@ -1153,15 +1151,15 @@ function ClientOverview({
               <div className="brand-item p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-foreground">
-                    Poslednji summary
+                    Poslednji izvestaj
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <StatusChip
-                      label={latestMeeting.emailSentToClient ? "Email sent" : "Email pending"}
+                      label={latestMeeting.emailSentToClient ? "Email poslat" : "Email ceka"}
                       tone={latestMeeting.emailSentToClient ? "success" : "warning"}
                     />
                     <StatusChip
-                      label={latestMeeting.aiSummaryReady ? "AI ready" : "AI pending"}
+                      label={latestMeeting.aiSummaryReady ? "Izvestaj spreman" : "Izvestaj ceka"}
                       tone={latestMeeting.aiSummaryReady ? "info" : "neutral"}
                     />
                   </div>
@@ -1199,9 +1197,9 @@ function ClientMeetings({
   return (
     <>
       <SectionCard
-        eyebrow="Meetings"
+        eyebrow="Sastanci"
         title="Istorija sastanaka"
-        description="Sada su prikazani i meeting compliance podaci: planirano vreme, stvarni start, trajanje, email i AI summary status."
+        description="Planirano vreme, stvarni start, trajanje, prisutni, materijali i izvestaj."
       >
         <div className="grid gap-4">
           {client.meetings.map((meeting) => (
@@ -1218,7 +1216,7 @@ function ClientMeetings({
                 <div className="flex flex-wrap gap-2">
                   <StatusChip label={meeting.status} tone={getMeetingTone(meeting.status)} />
                   <StatusChip
-                    label={meeting.clientOnTime ? "On time" : "Kasnio"}
+                    label={meeting.clientOnTime ? "Na vreme" : "Kasnio"}
                     tone={meeting.clientOnTime ? "success" : "warning"}
                   />
                   <StatusChip
@@ -1269,17 +1267,17 @@ function ClientMeetings({
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <StatusChip
-                  label={meeting.emailSentToClient ? "Email sent" : "Email pending"}
+                  label={meeting.emailSentToClient ? "Email poslat" : "Email ceka"}
                   tone={meeting.emailSentToClient ? "success" : "warning"}
                 />
                 <StatusChip
-                  label={meeting.aiSummaryReady ? "AI summary ready" : "AI pending"}
+                  label={meeting.aiSummaryReady ? "Izvestaj spreman" : "Izvestaj ceka"}
                   tone={meeting.aiSummaryReady ? "info" : "neutral"}
                 />
               </div>
 
               <div className="mt-5">
-                <p className="text-sm font-semibold text-foreground">Action items</p>
+                <p className="text-sm font-semibold text-foreground">Akcije</p>
                 <div className="mt-3 grid gap-3">
                   {meeting.actions.length ? (
                     meeting.actions.map((action) => (
@@ -1299,9 +1297,9 @@ function ClientMeetings({
 
       {latestMeeting ? (
         <SectionCard
-          eyebrow="AI"
-          title="Demo AI summary"
-          description="Ovaj mock flow pokazuje kako srpski audio sa sastanka ide ka strukturisanom summary-ju."
+          eyebrow="Izvestaj"
+          title="Generisanje izvestaja"
+          description="Transkript sastanka pretvara se u kratak izvestaj i akcije."
         >
           <MeetingSummaryGenerator
             clientName={client.name}
@@ -1343,31 +1341,31 @@ function ClientAnalytics({
 
   return (
     <SectionCard
-      eyebrow="Analytics"
-      title="Client dashboard analytics"
-      description="Klijent analytics sada ukljucuje i meeting target, punctuality i AI summary coverage uz standardne health signale."
+      eyebrow="Analitika"
+      title="Analitika klijenta"
+      description="Stanje, akcije, dolazak na vreme i obrada izvestaja."
     >
       <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="grid gap-3 md:grid-cols-2">
           <MetricCard
-            label="Health score"
+            label="Stanje"
             value={formatPercent(client.analytics.healthScore)}
             hint="ukupni status programa"
           />
           <MetricCard
-            label="Action completion"
+            label="Zavrsene akcije"
             value={formatPercent(client.analytics.actionCompletion)}
             hint="realizacija dogovorenog"
           />
           <MetricCard
-            label="Punctuality"
+            label="Dolazak na vreme"
             value={formatPercent(onTimeRate)}
             hint="dolazak na vreme"
           />
           <MetricCard
-            label="AI coverage"
+            label="Izvestaji"
             value={formatPercent(aiCoverage)}
-            hint="summary spreman posle sastanka"
+            hint="izvestaj spreman"
           />
         </div>
 
@@ -1375,22 +1373,22 @@ function ClientAnalytics({
           <MiniBars
             items={[
               {
-                label: "Revenue delta",
+                label: "Promena prihoda",
                 value: Math.max(8, Math.min(100, 50 + client.analytics.revenueDelta * 2)),
                 valueLabel: formatSignedPercent(client.analytics.revenueDelta),
               },
               {
-                label: "Milestone progress",
+                label: "Napredak faza",
                 value: client.analytics.milestoneProgress,
                 valueLabel: formatPercent(client.analytics.milestoneProgress),
               },
               {
-                label: "Meeting target usage",
+                label: "Koriscenje norme",
                 value: targetUsage,
                 valueLabel: `${meetingLoad.total}/${client.meetingAverageTarget}`,
               },
               {
-                label: "Meeting consistency",
+                label: "Ritam sastanaka",
                 value: client.analytics.meetingConsistency,
                 valueLabel: formatPercent(client.analytics.meetingConsistency),
               },
@@ -1442,9 +1440,9 @@ function ClientResources({
       </SectionCard>
 
       <SectionCard
-        eyebrow="Documents"
+        eyebrow="Dokumenti"
         title="Dokumentacija"
-        description="Fajlovi i dashboard-i koji su podeljeni sa klijentom."
+        description="Fajlovi i materijali podeljeni sa klijentom."
       >
         <div className="grid gap-3">
           {client.documents.map((document) => (
@@ -1462,9 +1460,9 @@ function ClientResources({
       </SectionCard>
 
       <SectionCard
-        eyebrow="Actions"
+        eyebrow="Akcije"
         title={
-          client.sharedActionBoard.length ? "Shared action board" : "Follow-up akcije"
+          client.sharedActionBoard.length ? "Zajednicka action lista" : "Follow-up akcije"
         }
         description="Taskovi, reminder pravila i resursi koji ostaju vidljivi klijentu."
       >

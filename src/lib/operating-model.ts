@@ -24,7 +24,7 @@ export const meetingEvidenceRequirements: EvidenceRequirement[] = [
     title: "AI izvestaj sa sastanka",
     audience: "Interno + klijent",
     description:
-      "Audio sa sastanka ide na transkript i OpenAI summary koji vraca kratko sta se pricalo, sta je dogovoreno i sta je sledece.",
+      "Audio sa sastanka ide na transkript i vraca kratak pregled razgovora, dogovore i sledece korake.",
   },
   {
     id: "materials",
@@ -63,7 +63,7 @@ export const programPlaybooks: ProgramPlaybook[] = [
         timing: "Nakon kickoff-a do zavrsetka",
         owner: "Profitability Consultant",
         description:
-          "Rad na profitabilnosti, marzama, cash disciplini i finansijskom fokusu. Ukupan target je da prosek ne ide preko 4 sastanka po klijentu.",
+          "Rad na profitabilnosti, marzama, cash disciplini i finansijskom fokusu. Norma je da prosek ne ide preko 4 sastanka po klijentu.",
       },
       {
         id: "mm-org",
@@ -75,9 +75,9 @@ export const programPlaybooks: ProgramPlaybook[] = [
       },
     ],
     staffResponsibilities: [
-      "Konsultanti unose summary sa sastanka, akcije, kasnjenje, trajanje i prisutne.",
-      "Administrator dodeljuje booking linkove i otvara pocetni kickoff setup.",
-      "Manager vodi raspodelu klijenata i kontrolu norme sastanaka po konsultantu.",
+      "Konsultanti unose izvestaj sa sastanka, akcije, kasnjenje, trajanje i prisutne.",
+      "Administrator dodeljuje booking linkove i otvara pocetni setup za kickoff.",
+      "Menadzer vodi raspodelu klijenata i kontrolu norme sastanaka po konsultantu.",
     ],
     clientVisibility: [
       "Klijent vidi samo svoju karticu, svoje sastanke, svoje materijale i akcije koje su mu dodeljene.",
@@ -92,11 +92,11 @@ export const programPlaybooks: ProgramPlaybook[] = [
     automations: [
       {
         id: "mm-meeting-summary",
-        title: "Meeting summary email",
+        title: "Email izvestaj sastanka",
         trigger: "Nakon obrade audio zapisa",
         audience: "Klijent + oba eksperta",
         outputs: [
-          "Kratak summary sastanka",
+          "Kratak izvestaj sastanka",
           "Dogovorene akcije",
           "Link ka materijalima i snimcima",
         ],
@@ -144,16 +144,16 @@ export const programPlaybooks: ProgramPlaybook[] = [
     ],
     staffResponsibilities: [
       "Sva tri eksperta upisuju taskove u jednu zajednicku action listu.",
-      "Svaki ekspert popunjava svoj meeting report na osnovu transkripta i summary pipeline-a.",
-      "Manager prati shared board, overdue zadatke i disciplinu izvrsenja kroz mesec.",
+      "Svaki ekspert popunjava svoj izvestaj na osnovu transkripta i toka za izvestaje.",
+      "Menadzer prati zajednicku action listu, zakasnele zadatke i disciplinu izvrsenja kroz mesec.",
     ],
     clientVisibility: [
-      "Klijent vidi shared action board, svoje sastanke, analytics i materijale.",
+      "Klijent vidi zajednicku action listu, svoje sastanke, analitiku i materijale.",
       "Klijent vidi samo taskove i dokumentaciju vezanu za svoj program.",
     ],
     adminChecklist: [
       "Uvesti klijente iz Excel batch-a sa 4 tipa sastanaka.",
-      "Dodeliti tri eksperta i povezati shared action board.",
+      "Dodeliti tri eksperta i povezati zajednicku action listu.",
       "Postaviti email reminder pravila za task create, due date i overdue.",
     ],
     meetingCapture: meetingEvidenceRequirements,
@@ -183,7 +183,7 @@ export const programPlaybooks: ProgramPlaybook[] = [
       {
         id: "bdp-meeting-report",
         title: "Meeting report delivery",
-        trigger: "Nakon transkripta i summary-ja",
+        trigger: "Nakon transkripta i izvestaja",
         audience: "Klijent + relevantni ekspert",
         outputs: [
           "Summary sastanka",
@@ -201,39 +201,39 @@ export const clientIntakeFields: IntakeField[] = [
     label: "Ime klijenta",
     required: true,
     owner: "Admin",
-    description: "Osnovni identitet klijenta za CRM karticu i client portal.",
+    description: "Osnovni identitet klijenta za internu karticu i client portal.",
   },
   {
     id: "company",
     label: "Kompanija",
     required: true,
     owner: "Admin",
-    description: "Naziv firme pod kojim vodimo celu dokumentaciju i reporting.",
+    description: "Naziv firme pod kojim vodimo celu dokumentaciju i izvestavanje.",
   },
   {
     id: "program",
     label: "Program",
     required: true,
-    owner: "Manager/Admin",
+    owner: "Menadzer / Admin",
     description: "Biramo da li klijent ulazi u Master Mind ili BDP tok.",
   },
   {
     id: "assignments",
     label: "Dodeljeni eksperti",
     required: true,
-    owner: "Manager",
+    owner: "Menadzer",
     description: "Za Master Mind oba eksperta, za BDP Operations, Finance i HR.",
   },
   {
     id: "meeting-schedule",
-    label: "Pocetni meeting cadence",
+    label: "Pocetni raspored sastanaka",
     required: true,
     owner: "Admin",
     description: "Kickoff ili mesecni BDP raspored koji odmah ide na karticu klijenta.",
   },
   {
     id: "drive-root",
-    label: "Drive root folder",
+    label: "Glavni Drive folder",
     required: true,
     owner: "Admin",
     description: "Mesto gde idu dokumentacija, materijali, audio i video snimci.",
@@ -253,14 +253,14 @@ export const staffIntakeFields: IntakeField[] = [
     label: "Ime zaposlenog",
     required: true,
     owner: "Admin",
-    description: "Koristi se za workspace, role model i dodelu klijenata.",
+    description: "Koristi se za radni prostor, ulogu i dodelu klijenata.",
   },
   {
     id: "role",
     label: "Uloga",
     required: true,
     owner: "Admin",
-    description: "Consultant ili manager, sa opcionim admin add-on permission-om.",
+    description: "Konsultant ili menadzer, sa opcionim admin pristupom.",
   },
   {
     id: "discipline",
@@ -272,9 +272,9 @@ export const staffIntakeFields: IntakeField[] = [
   },
   {
     id: "team",
-    label: "Team i fokus",
+    label: "Tim i fokus",
     required: true,
-    owner: "Manager/Admin",
+    owner: "Menadzer / Admin",
     description: "Definise gde ulazi u operativnu strukturu i koje klijente moze da vodi.",
   },
 ];
