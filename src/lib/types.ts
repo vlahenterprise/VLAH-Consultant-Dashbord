@@ -5,6 +5,9 @@ export type JourneyStatus = "Zavrseno" | "U toku" | "Predstoji";
 export type EmployeeRole = "consultant" | "manager";
 export type ActorKind = "staff" | "client";
 export type NavGroup = "work" | "personal" | "admin";
+export type AssignmentResponsibility = "Lead" | "Support";
+export type ClientSourceStatus = "Povezano" | "Rucno" | "Ceka sync";
+export type ReportAudience = "Interno" | "Klijent" | "Interno + klijent";
 export type WorkspaceSection =
   | "overview"
   | "clients"
@@ -168,6 +171,7 @@ export type Meeting = {
   summary: string;
   transcriptPreview: string;
   actions: MeetingAction[];
+  reportMeta?: MeetingReportMeta;
   recording: {
     videoUrl: string;
     audioUrl: string;
@@ -223,15 +227,13 @@ export type Client = {
   programModules: string[];
   meetingAverageTarget: number;
   driveRootUrl: string;
-  assignments: {
-    consultantId: string;
-    specialty: string;
-    module: string;
-  }[];
+  assignments: ClientAssignment[];
   analytics: ClientAnalytics;
   revenueSnapshot: string;
   nextMilestone: string;
   sharedActionBoard: MeetingAction[];
+  dataSources: ClientDataSource[];
+  customerServiceNotes: CustomerServiceNote[];
   documents: ClientDocument[];
   resources: ClientResource[];
   meetings: Meeting[];
@@ -289,6 +291,33 @@ export type SummaryResult = {
   suggestedFollowUp: string;
 };
 
+export type ReportTemplate = {
+  id: string;
+  name: string;
+  reportType: string;
+  audience: ReportAudience;
+  description: string;
+  programIds: string[];
+  prePrompt: string;
+  prompt: string;
+  outputSections: string[];
+  excludedFields: string[];
+};
+
+export type SafeReportContext = {
+  clientLabel: string;
+  removedFields: string[];
+  includedSignals: string[];
+  promptPreview: string;
+};
+
+export type MeetingReportPreview = SummaryResult & {
+  templateId: string;
+  templateName: string;
+  reportType: string;
+  safeContext: SafeReportContext;
+};
+
 export type NavigationItem = {
   group: NavGroup;
   label: string;
@@ -306,10 +335,48 @@ export type TransferSuggestion = {
   reason: string;
 };
 
+export type ClientAssignment = {
+  consultantId: string;
+  specialty: string;
+  module: string;
+  responsibility?: AssignmentResponsibility;
+};
+
+export type ClientDataSource = {
+  id: "thinkific" | "ops-system" | "customer-service";
+  label: string;
+  status: ClientSourceStatus;
+  externalId: string;
+  owner: string;
+  summary: string;
+  metrics: string[];
+  lastSyncedAt?: string;
+};
+
+export type CustomerServiceNote = {
+  id: string;
+  title: string;
+  details: string;
+  owner: string;
+  updatedAt: string;
+};
+
+export type MeetingReportMeta = {
+  templateId: string;
+  templateName: string;
+  reportType: string;
+  expertOwnerId: string;
+  safeClientLabel: string;
+  excludedFields: string[];
+  sourceIds: string[];
+  savedAt: string;
+};
+
 export type AppData = {
   programs: Program[];
   staffUsers: StaffUser[];
   clients: Client[];
   clientPortalUsers: ClientPortalUser[];
   transferSuggestions: TransferSuggestion[];
+  reportTemplates: ReportTemplate[];
 };

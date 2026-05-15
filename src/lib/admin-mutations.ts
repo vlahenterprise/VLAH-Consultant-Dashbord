@@ -1,15 +1,27 @@
 import { getMeetingTemplatesForProgram } from "@/lib/admin-blueprints";
 import {
+  generateMeetingReportPreview,
+  mergeSuggestedActions,
+} from "@/lib/ai-reporting";
+import {
   getProgramById,
   updateAppData,
 } from "@/lib/app-data";
 import {
+  buildDefaultClientDataSources,
+  buildDefaultCustomerServiceNotes,
+} from "@/lib/operations-defaults";
+import {
   AppData,
   BdpImportRow,
   Client,
+  ClientAssignment,
+  ClientDataSource,
   EmployeeRole,
   Meeting,
+  MeetingReportPreview,
   MeetingTemplate,
+  ReportTemplate,
   StaffUser,
 } from "@/lib/types";
 
@@ -37,6 +49,46 @@ type CreateStaffInput = {
   team: string;
   focus: string;
   specialties: string[];
+};
+
+type UpdateClientAssignmentsInput = {
+  clientId: string;
+  assignments: ClientAssignment[];
+};
+
+type UpdateClientDataSourcesInput = {
+  clientId: string;
+  dataSources: ClientDataSource[];
+  noteTitle?: string;
+  noteDetails?: string;
+  noteOwner?: string;
+};
+
+type UpdateReportTemplateInput = {
+  templateId: string;
+  name: string;
+  reportType: string;
+  audience: ReportTemplate["audience"];
+  description: string;
+  prePrompt: string;
+  prompt: string;
+  outputSections: string[];
+};
+
+type SaveMeetingReportInput = {
+  clientId: string;
+  meetingId: string;
+  templateId: string;
+  expertOwnerId: string;
+  transcript: string;
+  internalNotes?: string;
+  actualStartAt: string;
+  endedAt: string;
+  status: Meeting["status"];
+  clientOnTime: boolean;
+  emailSentToClient: boolean;
+  includeSourceIds: string[];
+  preview?: MeetingReportPreview;
 };
 
 function slugify(value: string) {
@@ -225,8 +277,31 @@ function buildAssignments(
       module,
       consultantId,
       specialty: toTitleFromModule(module),
+      responsibility: "Lead" as const,
     };
   });
+}
+
+function normalizeAssignments(assignments: ClientAssignment[]) {
+  return assignments
+    .filter((assignment) => assignment.consultantId && assignment.module)
+    .map((assignment) => ({
+      consultantId: assignment.consultantId,
+      module: assignment.module,
+      specialty: assignment.specialty || toTitleFromModule(assignment.module),
+      responsibility: assignment.responsibility ?? "Lead",
+    }));
+}
+
+function rebuildStaffClientIndex(draft: AppData) {
+  draft.staffUsers = draft.staffUsers.map((staff) => ({
+    ...staff,
+    activeClientIds: draft.clients
+      .filter((client) =>
+        client.assignments.some((assignment) => assignment.consultantId === staff.id),
+      )
+      .map((client) => client.id),
+  }));
 }
 
 function buildInitialMeetings(
@@ -312,7 +387,7 @@ function createPortalUser(client: Client) {
     name: client.name,
     email: client.email,
     company: client.company,
-    portalLabel: `${client.company} portal`,
+    portalLabel: "Portal klijenta",
   };
 }
 
@@ -373,6 +448,23 @@ function buildClientRecord(data: AppData, input: CreateClientInput) {
         ? "Zakljucati prvi mesecni kickoff i podeliti action board klijentu."
         : "Zakazati zajednicki kickoff i podeliti booking link oba eksperta.",
     sharedActionBoard: [],
+    dataSources: buildDefaultClientDataSources({
+      programId: program.id,
+      programModules: program.modules,
+      nextMilestone:
+        program.id === "bdp"
+          ? "Zakljucati prvi mesecni kickoff i podeliti action board klijentu."
+          : "Zakazati zajednicki kickoff i podeliti booking link oba eksperta.",
+      stage:
+        program.id === "bdp"
+          ? "Monthly cadence setup"
+          : "Kickoff scheduling i assignment setup",
+      monthlyGoal:
+        program.id === "bdp"
+          ? "Pokrenuti prvi mesecni 3:1 i povezati zajednicku action listu."
+          : "Zakazati zajednicki kickoff i otvoriti oba konsultantska toka.",
+    }),
+    customerServiceNotes: buildDefaultCustomerServiceNotes(),
     documents: [],
     resources: [],
     meetings: buildInitialMeetings(
@@ -400,16 +492,7 @@ export async function createClient(input: CreateClientInput) {
       draft.clientPortalUsers = [createPortalUser(client), ...draft.clientPortalUsers];
     }
 
-    draft.staffUsers = draft.staffUsers.map((staff) =>
-      client.assignments.some((assignment) => assignment.consultantId === staff.id)
-        ? {
-            ...staff,
-            activeClientIds: Array.from(
-              new Set([client.id, ...staff.activeClientIds]),
-            ),
-          }
-        : staff,
-    );
+    rebuildStaffClientIndex(draft);
 
     return draft;
   });
@@ -492,6 +575,15 @@ function createBdpClientForImport(
     revenueSnapshot: "N/A",
     nextMilestone: "Potvrditi monthly cadence i podeliti client portal pristup.",
     sharedActionBoard: [],
+    dataSources: buildDefaultClientDataSources({
+      programId: "bdp",
+      programModules: ["Operations", "Finance", "HR & Leadership"],
+      nextMilestone: "Potvrditi monthly cadence i podeliti client portal pristup.",
+      stage: "BDP import onboarding",
+      monthlyGoal:
+        "Pokrenuti mesecni 3:1 i tri pojedinacna follow-up sastanka iz import batch-a.",
+    }),
+    customerServiceNotes: buildDefaultCustomerServiceNotes(),
     documents: [],
     resources: [],
     meetings: [],
@@ -571,19 +663,6 @@ export async function importBdpSchedule(rows: BdpImportRow[]) {
             ...draft.clientPortalUsers,
           ];
         }
-
-        draft.staffUsers = draft.staffUsers.map((staff) =>
-          targetClient.assignments.some(
-            (assignment) => assignment.consultantId === staff.id,
-          )
-            ? {
-                ...staff,
-                activeClientIds: Array.from(
-                  new Set([targetClient.id, ...staff.activeClientIds]),
-                ),
-              }
-            : staff,
-        );
       }
 
       const baseDate = addDays(new Date(), 3 + index, 10);
@@ -616,6 +695,173 @@ export async function importBdpSchedule(rows: BdpImportRow[]) {
         addDays(baseDate, 16, 12),
       );
     });
+
+    rebuildStaffClientIndex(draft);
+
+    return draft;
+  });
+}
+
+export async function updateClientAssignments(input: UpdateClientAssignmentsInput) {
+  return updateAppData((draft) => {
+    const client = draft.clients.find((item) => item.id === input.clientId);
+    if (!client) {
+      throw new Error("Klijent nije pronadjen.");
+    }
+
+    const nextAssignments = normalizeAssignments(input.assignments);
+    if (!nextAssignments.length) {
+      throw new Error("Potrebna je bar jedna dodela eksperta.");
+    }
+
+    const missingCoverage = client.programModules.filter(
+      (module) => !nextAssignments.some((assignment) => assignment.module === module),
+    );
+
+    if (missingCoverage.length) {
+      throw new Error(
+        `Nedostaje pokrivenost za module: ${missingCoverage.join(", ")}.`,
+      );
+    }
+
+    client.assignments = nextAssignments;
+    client.consultantId =
+      nextAssignments.find((assignment) => assignment.responsibility === "Lead")
+        ?.consultantId ??
+      nextAssignments[0]?.consultantId ??
+      "";
+
+    rebuildStaffClientIndex(draft);
+    return draft;
+  });
+}
+
+export async function updateClientDataSources(input: UpdateClientDataSourcesInput) {
+  return updateAppData((draft) => {
+    const client = draft.clients.find((item) => item.id === input.clientId);
+    if (!client) {
+      throw new Error("Klijent nije pronadjen.");
+    }
+
+    client.dataSources = input.dataSources.map((source) => ({
+      ...source,
+      metrics: Array.isArray(source.metrics) ? source.metrics : [],
+    }));
+
+    if (input.noteTitle?.trim() && input.noteDetails?.trim()) {
+      client.customerServiceNotes = [
+        {
+          id: buildId("cs-note", `${client.id}-${input.noteTitle}`),
+          title: input.noteTitle.trim(),
+          details: input.noteDetails.trim(),
+          owner: input.noteOwner?.trim() || "Customer Service",
+          updatedAt: new Date().toISOString(),
+        },
+        ...client.customerServiceNotes,
+      ];
+    }
+
+    return draft;
+  });
+}
+
+export async function updateReportTemplate(input: UpdateReportTemplateInput) {
+  return updateAppData((draft) => {
+    const template = draft.reportTemplates.find((item) => item.id === input.templateId);
+    if (!template) {
+      throw new Error("Report template nije pronadjen.");
+    }
+
+    template.name = input.name.trim();
+    template.reportType = input.reportType.trim();
+    template.audience = input.audience;
+    template.description = input.description.trim();
+    template.prePrompt = input.prePrompt.trim();
+    template.prompt = input.prompt.trim();
+    template.outputSections = input.outputSections.filter(Boolean);
+
+    return draft;
+  });
+}
+
+export async function saveMeetingReport(input: SaveMeetingReportInput) {
+  return updateAppData((draft) => {
+    const client = draft.clients.find((item) => item.id === input.clientId);
+    if (!client) {
+      throw new Error("Klijent nije pronadjen.");
+    }
+
+    const meeting = client.meetings.find((item) => item.id === input.meetingId);
+    if (!meeting) {
+      throw new Error("Sastanak nije pronadjen.");
+    }
+
+    const template = draft.reportTemplates.find((item) => item.id === input.templateId);
+    if (!template) {
+      throw new Error("Report template nije pronadjen.");
+    }
+
+    const preview =
+      input.preview ??
+      generateMeetingReportPreview({
+        client,
+        meeting,
+        transcript: input.transcript,
+        template,
+        internalNotes: input.internalNotes,
+        sourceIds: input.includeSourceIds,
+      });
+
+    meeting.actualStartAt = input.actualStartAt;
+    meeting.endedAt = input.endedAt;
+    meeting.date = input.actualStartAt;
+    meeting.durationMinutes = Math.max(
+      1,
+      Math.round(
+        (new Date(input.endedAt).getTime() - new Date(input.actualStartAt).getTime()) /
+          60000,
+      ),
+    );
+    meeting.status = input.status;
+    meeting.clientOnTime = input.clientOnTime;
+    meeting.overran = meeting.durationMinutes > 60;
+    meeting.emailSentToClient = input.emailSentToClient;
+    meeting.aiSummaryReady = true;
+    meeting.summary = [
+      preview.overview,
+      preview.keyPoints.length ? `Kljucno: ${preview.keyPoints.join(" | ")}` : "",
+      input.internalNotes?.trim() ? `Napomena eksperta: ${input.internalNotes.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    meeting.transcriptPreview = input.transcript.trim().slice(0, 1500);
+    meeting.reportMeta = {
+      templateId: preview.templateId,
+      templateName: preview.templateName,
+      reportType: preview.reportType,
+      expertOwnerId: input.expertOwnerId,
+      safeClientLabel: preview.safeContext.clientLabel,
+      excludedFields: preview.safeContext.removedFields,
+      sourceIds: input.includeSourceIds,
+      savedAt: new Date().toISOString(),
+    };
+
+    const actionDueDate = new Date(input.endedAt);
+    actionDueDate.setDate(actionDueDate.getDate() + 7);
+
+    meeting.actions = mergeSuggestedActions({
+      existingActions: meeting.actions,
+      preview,
+      dueDate: actionDueDate.toISOString(),
+    });
+
+    if (client.programId === "bdp" || client.sharedActionBoard.length) {
+      client.sharedActionBoard = mergeSuggestedActions({
+        existingActions: client.sharedActionBoard,
+        preview,
+        dueDate: actionDueDate.toISOString(),
+      });
+    }
 
     return draft;
   });

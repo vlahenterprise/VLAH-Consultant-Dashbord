@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AdminSetupPanel } from "@/components/admin-setup-panel";
-import { MeetingSummaryGenerator } from "@/components/meeting-summary-generator";
 import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
 import {
@@ -157,7 +156,7 @@ function ExpertAssignments({
             {assignment.module}
           </p>
           <p className={compact ? "mt-1 text-[11px]" : "mt-1 text-sm text-muted"}>
-            {consultant.name} / {assignment.specialty}
+            {consultant.name} / {assignment.specialty} / {assignment.responsibility ?? "Lead"}
           </p>
         </div>
       ))}
@@ -960,6 +959,7 @@ function AdminSection({
         staffUsers={data.staffUsers}
         programs={data.programs}
         integrations={integrations}
+        reportTemplates={data.reportTemplates}
         meetingTemplates={meetingTemplates}
         reminderRules={reminderRules}
         importBlueprints={importBlueprints}
@@ -1192,126 +1192,105 @@ function ClientMeetings({
     return null;
   }
 
-  const latestMeeting = getClientLatestMeeting(client);
-
   return (
-    <>
-      <SectionCard
-        eyebrow="Sastanci"
-        title="Istorija sastanaka"
-        description="Planirano vreme, stvarni start, trajanje, prisutni, materijali i izvestaj."
-      >
-        <div className="grid gap-4">
-          {client.meetings.map((meeting) => (
-            <div key={meeting.id} className="brand-item p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-foreground">
-                    {meeting.title}
-                  </p>
-                  <p className="mt-1 text-sm text-muted">
-                    {meeting.type} / {getMeetingModulesLabel(meeting)}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <StatusChip label={meeting.status} tone={getMeetingTone(meeting.status)} />
-                  <StatusChip
-                    label={meeting.clientOnTime ? "Na vreme" : "Kasnio"}
-                    tone={meeting.clientOnTime ? "success" : "warning"}
-                  />
-                  <StatusChip
-                    label={meeting.overran ? "Produzen" : "Na vreme"}
-                    tone={meeting.overran ? "warning" : "neutral"}
-                  />
-                </div>
+    <SectionCard
+      eyebrow="Sastanci"
+      title="Istorija sastanaka"
+      description="Planirano vreme, stvarni start, trajanje, prisutni, materijali i izvestaj."
+    >
+      <div className="grid gap-4">
+        {client.meetings.map((meeting) => (
+          <div key={meeting.id} className="brand-item p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-lg font-semibold text-foreground">
+                  {meeting.title}
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  {meeting.type} / {getMeetingModulesLabel(meeting)}
+                </p>
               </div>
-
-              <div className="mt-4 grid gap-2 text-sm text-muted md:grid-cols-2 xl:grid-cols-4">
-                <p>Planirano: {formatDateTime(meeting.scheduledStartAt)}</p>
-                <p>Stvarni start: {formatDateTime(meeting.actualStartAt)}</p>
-                <p>Kraj: {formatDateTime(meeting.endedAt)}</p>
-                <p>Trajanje: {meeting.durationMinutes} min</p>
-              </div>
-
-              <p className="mt-4 text-sm leading-6 text-muted">{meeting.summary}</p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {meeting.participants.map((participant) => (
-                  <StatusChip key={`${meeting.id}-${participant}`} label={participant} tone="neutral" />
-                ))}
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-3 text-sm">
-                <a href={meeting.recording.videoUrl} className="brand-button-secondary">
-                  Video
-                </a>
-                <a href={meeting.recording.audioUrl} className="brand-button-secondary">
-                  Audio
-                </a>
-                <a
-                  href={meeting.recording.driveFolderUrl}
-                  className="brand-button-secondary"
-                >
-                  Drive folder
-                </a>
-                <a href={meeting.recording.materialsUrl} className="brand-button-secondary">
-                  Materijali
-                </a>
-                <a
-                  href={meeting.recording.recordingsUrl}
-                  className="brand-button-secondary"
-                >
-                  Snimci
-                </a>
-              </div>
-
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
+                <StatusChip label={meeting.status} tone={getMeetingTone(meeting.status)} />
                 <StatusChip
-                  label={meeting.emailSentToClient ? "Email poslat" : "Email ceka"}
-                  tone={meeting.emailSentToClient ? "success" : "warning"}
+                  label={meeting.clientOnTime ? "Na vreme" : "Kasnio"}
+                  tone={meeting.clientOnTime ? "success" : "warning"}
                 />
                 <StatusChip
-                  label={meeting.aiSummaryReady ? "Izvestaj spreman" : "Izvestaj ceka"}
-                  tone={meeting.aiSummaryReady ? "info" : "neutral"}
+                  label={meeting.overran ? "Produzen" : "Na vreme"}
+                  tone={meeting.overran ? "warning" : "neutral"}
                 />
-              </div>
-
-              <div className="mt-5">
-                <p className="text-sm font-semibold text-foreground">Akcije</p>
-                <div className="mt-3 grid gap-3">
-                  {meeting.actions.length ? (
-                    meeting.actions.map((action) => (
-                      <OpenActionPreview key={action.id} action={action} />
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted">
-                      Za ovaj sastanak nema dodatih akcija.
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
-          ))}
-        </div>
-      </SectionCard>
 
-      {latestMeeting ? (
-        <SectionCard
-          eyebrow="Izvestaj"
-          title="Generisanje izvestaja"
-          description="Transkript sastanka pretvara se u kratak izvestaj i akcije."
-        >
-          <MeetingSummaryGenerator
-            clientName={client.name}
-            meetingTitle={latestMeeting.title}
-            defaultTranscript={
-              latestMeeting.transcriptPreview ||
-              "Klijent je podelio status zadataka i definisani su sledeci koraci."
-            }
-          />
-        </SectionCard>
-      ) : null}
-    </>
+            <div className="mt-4 grid gap-2 text-sm text-muted md:grid-cols-2 xl:grid-cols-4">
+              <p>Planirano: {formatDateTime(meeting.scheduledStartAt)}</p>
+              <p>Stvarni start: {formatDateTime(meeting.actualStartAt)}</p>
+              <p>Kraj: {formatDateTime(meeting.endedAt)}</p>
+              <p>Trajanje: {meeting.durationMinutes} min</p>
+            </div>
+
+            <p className="mt-4 text-sm leading-6 text-muted">{meeting.summary}</p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {meeting.participants.map((participant) => (
+                <StatusChip key={`${meeting.id}-${participant}`} label={participant} tone="neutral" />
+              ))}
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-3 text-sm">
+              <a href={meeting.recording.videoUrl} className="brand-button-secondary">
+                Video
+              </a>
+              <a href={meeting.recording.audioUrl} className="brand-button-secondary">
+                Audio
+              </a>
+              <a
+                href={meeting.recording.driveFolderUrl}
+                className="brand-button-secondary"
+              >
+                Drive folder
+              </a>
+              <a href={meeting.recording.materialsUrl} className="brand-button-secondary">
+                Materijali
+              </a>
+              <a
+                href={meeting.recording.recordingsUrl}
+                className="brand-button-secondary"
+              >
+                Snimci
+              </a>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <StatusChip
+                label={meeting.emailSentToClient ? "Email poslat" : "Email ceka"}
+                tone={meeting.emailSentToClient ? "success" : "warning"}
+              />
+              <StatusChip
+                label={meeting.aiSummaryReady ? "Izvestaj spreman" : "Izvestaj ceka"}
+                tone={meeting.aiSummaryReady ? "info" : "neutral"}
+              />
+            </div>
+
+            <div className="mt-5">
+              <p className="text-sm font-semibold text-foreground">Akcije</p>
+              <div className="mt-3 grid gap-3">
+                {meeting.actions.length ? (
+                  meeting.actions.map((action) => (
+                    <OpenActionPreview key={action.id} action={action} />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted">
+                    Za ovaj sastanak nema dodatih akcija.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
   );
 }
 
@@ -1467,6 +1446,31 @@ function ClientResources({
         description="Taskovi, reminder pravila i resursi koji ostaju vidljivi klijentu."
       >
         <div className="grid gap-3">
+          <div className="brand-item p-4">
+            <p className="font-semibold text-foreground">Povezani izvori</p>
+            <div className="mt-3 grid gap-3">
+              {client.dataSources.map((source) => (
+                <div
+                  key={source.id}
+                  className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="font-semibold text-foreground">{source.label}</p>
+                    <StatusChip label={source.status} tone="neutral" />
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-muted">{source.summary}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {source.metrics.map((metric) => (
+                      <span key={metric} className="brand-pill">
+                        {metric}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {actionBoard.length ? (
             actionBoard.map((action) => (
               <OpenActionPreview key={action.id} action={action} />

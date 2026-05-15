@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { MeetingSummaryGenerator } from "@/components/meeting-summary-generator";
+import { ClientOperationsPanel } from "@/components/client-operations-panel";
+import { MeetingReportWorkspace } from "@/components/meeting-report-workspace";
 import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
 import {
@@ -22,7 +23,12 @@ import {
   getMeetingModulesLabel,
   isTaskOverdue,
 } from "@/lib/client-utils";
-import { getClientById, getProgramById, loadAppData } from "@/lib/app-data";
+import {
+  getClientById,
+  getConsultantById,
+  getProgramById,
+  loadAppData,
+} from "@/lib/app-data";
 import { formatDate, formatDateTime } from "@/lib/formatting";
 import { getProgramPlaybook } from "@/lib/operating-model";
 import { generateJourney } from "@/lib/journey";
@@ -205,6 +211,14 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
+                  <p className="text-sm text-muted">Poslednji odrzan kontakt</p>
+                  <p className="mt-2 font-semibold text-foreground">
+                    {latestMeeting
+                      ? formatDateTime(latestMeeting.actualStartAt)
+                      : "Jos nema istorije"}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
                   <p className="text-sm text-muted">Otvorene akcije</p>
                   <p className="mt-2 font-semibold text-foreground">
                     {openActions.length}
@@ -248,7 +262,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                       {assignment.module}
                     </p>
                     <p className="mt-1 text-sm text-muted">
-                      {consultant.name} / {assignment.specialty}
+                      {consultant.name} / {assignment.specialty} / {assignment.responsibility ?? "Lead"}
                     </p>
                   </div>
                 ))}
@@ -409,6 +423,21 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
           </div>
         </SectionCard>
 
+        <SectionCard
+          eyebrow="Operativa"
+          title="Operativni centar klijenta"
+          description="Posle sastanka ekspert unosi izvestaj, bira AI template, osvezava izvore i po potrebi menja eksperte."
+        >
+          <div className="grid gap-6">
+            <MeetingReportWorkspace
+              client={client}
+              staffUsers={data.staffUsers}
+              reportTemplates={data.reportTemplates}
+            />
+            <ClientOperationsPanel client={client} staffUsers={data.staffUsers} />
+          </div>
+        </SectionCard>
+
         <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <SectionCard
             eyebrow="Sastanci"
@@ -416,8 +445,13 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
             description="Vreme, prisustvo, trajanje, izvestaj, akcije i Drive linkovi."
           >
             <div className="grid gap-4">
-              {client.meetings.map((meeting) => (
-                <div key={meeting.id} className="brand-item p-5">
+              {client.meetings.map((meeting) => {
+                const reportOwner = meeting.reportMeta
+                  ? getConsultantById(data, meeting.reportMeta.expertOwnerId)
+                  : null;
+
+                return (
+                  <div key={meeting.id} className="brand-item p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-lg font-semibold text-foreground">
@@ -442,6 +476,17 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                       />
                     </div>
                   </div>
+
+                  {meeting.reportMeta ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <StatusChip label={meeting.reportMeta.templateName} tone="info" />
+                      <StatusChip label={meeting.reportMeta.reportType} tone="neutral" />
+                      <StatusChip
+                        label={reportOwner ? `Ekspert: ${reportOwner.name}` : "Ekspert sacuvao"}
+                        tone="accent"
+                      />
+                    </div>
+                  ) : null}
 
                   <div className="mt-4 grid gap-2 text-sm text-muted md:grid-cols-2 xl:grid-cols-4">
                     <p>Planirano: {formatDateTime(meeting.scheduledStartAt)}</p>
@@ -528,8 +573,9 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </SectionCard>
 
@@ -596,6 +642,43 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
 
                 <div className="rounded-[24px] border border-border bg-panel-strong p-5">
                   <p className="text-sm font-semibold text-foreground">
+                    Povezani izvori
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    {client.dataSources.map((source) => (
+                      <div
+                        key={source.id}
+                        className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <p className="font-semibold text-foreground">{source.label}</p>
+                          <StatusChip label={source.status} tone="neutral" />
+                        </div>
+                        <p className="mt-2 text-sm leading-6 text-muted">
+                          {source.summary}
+                        </p>
+                        {source.metrics.length ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {source.metrics.map((metric) => (
+                              <span key={`${source.id}-${metric}`} className="brand-pill">
+                                {metric}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                        <p className="mt-2 text-sm text-muted">
+                          Vlasnik: {source.owner}
+                          {source.lastSyncedAt
+                            ? ` / sync ${formatDateTime(source.lastSyncedAt)}`
+                            : " / sync nije povezan"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-[24px] border border-border bg-panel-strong p-5">
+                  <p className="text-sm font-semibold text-foreground">
                     Dokumentacija
                   </p>
                   <div className="mt-4 space-y-3">
@@ -611,7 +694,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
                           {document.type} / {document.status}
                         </p>
                         <p className="mt-1 text-sm text-muted">
-                          Owner: {document.owner} / update{" "}
+                          Vlasnik: {document.owner} / update{" "}
                           {formatDateTime(document.lastUpdated)}
                         </p>
                       </div>
@@ -643,6 +726,34 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
 
                 <div className="rounded-[24px] border border-border bg-panel-strong p-5">
                   <p className="text-sm font-semibold text-foreground">
+                    Customer Service napomene
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    {client.customerServiceNotes.length ? (
+                      client.customerServiceNotes.map((note) => (
+                        <div
+                          key={note.id}
+                          className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3"
+                        >
+                          <p className="font-semibold text-foreground">{note.title}</p>
+                          <p className="mt-1 text-sm text-muted">
+                            {note.owner} / update {formatDateTime(note.updatedAt)}
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-muted">
+                            {note.details}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted">
+                        Nema dodatih customer service napomena.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-[24px] border border-border bg-panel-strong p-5">
+                  <p className="text-sm font-semibold text-foreground">
                     {client.sharedActionBoard.length
                       ? "Zajednicka action lista"
                       : "Akciona tabla za klijenta"}
@@ -665,20 +776,6 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
               </div>
             </SectionCard>
 
-            <SectionCard
-              eyebrow="Izvestaj"
-              title="Generator izvestaja"
-              description="Srpski transkript sastanka pretvara se u kratak izvestaj i akcije."
-            >
-              <MeetingSummaryGenerator
-                clientName={client.name}
-                meetingTitle={latestMeeting?.title ?? "Poslednji sastanak"}
-                defaultTranscript={
-                  latestMeeting?.transcriptPreview ??
-                  "Klijent je podelio status projekta i dogovoreni su sledeci koraci."
-                }
-              />
-            </SectionCard>
           </div>
         </section>
       </main>

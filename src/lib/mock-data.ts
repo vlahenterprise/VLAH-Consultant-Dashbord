@@ -1,8 +1,13 @@
 import {
+  buildDefaultClientDataSources,
+  buildDefaultCustomerServiceNotes,
+} from "@/lib/operations-defaults";
+import {
   Client,
   ClientPortalUser,
   NavigationItem,
   Program,
+  ReportTemplate,
   StaffUser,
   TransferSuggestion,
   WorkspaceActor,
@@ -95,6 +100,69 @@ export const programs: Program[] = [
         outcome: "Tim, liderstvo, HR procesi i accountability.",
       },
     ],
+  },
+];
+
+export const reportTemplates: ReportTemplate[] = [
+  {
+    id: "internal-ops-report",
+    name: "Interni operativni izvestaj",
+    reportType: "Interni zapisnik",
+    audience: "Interno",
+    description:
+      "Koristi se odmah posle sastanka da ekspert zabelezi status, odluke, blokere i akcije bez deljenja licnih podataka sa AI slojem.",
+    programIds: ["master-mind", "bdp"],
+    prePrompt:
+      "Ponasa se kao interni konsultantski asistent. Sumiraj sastanak jasno, bez lepih marketinskih formulacija i bez osetljivih licnih podataka.",
+    prompt:
+      "Vrati: kratak pregled, 3-5 kljucnih tacaka, akcije sa vlasnikom i rizike koji mogu da ugroze izvrsenje.",
+    outputSections: ["Pregled", "Kljucne tacke", "Akcije", "Rizici"],
+    excludedFields: ["ime", "email", "telefon", "naziv firme"],
+  },
+  {
+    id: "client-follow-up-email",
+    name: "Klijentski follow-up email",
+    reportType: "Klijentski email",
+    audience: "Klijent",
+    description:
+      "Pravi miran i pregledan klijentski follow-up sa onim sto je dogovoreno i sta sledi.",
+    programIds: ["master-mind", "bdp"],
+    prePrompt:
+      "Pisati jasno i poslovno, bez internih komentara i bez otkrivanja licnih podataka koji nisu neophodni za izvestaj.",
+    prompt:
+      "Vrati pregled sastanka, dogovorene akcije, rokove i materijale koje klijent treba da otvori.",
+    outputSections: ["Pregled", "Dogovorene akcije", "Rokovi", "Materijali"],
+    excludedFields: ["ime", "email", "telefon", "naziv firme"],
+  },
+  {
+    id: "bdp-action-sync",
+    name: "BDP akcioni pregled",
+    reportType: "Akcioni pregled",
+    audience: "Interno + klijent",
+    description:
+      "Za BDP ciklus kada treba osveziti jednu zajednicku action listu posle 3:1 ili 1:1 sastanka.",
+    programIds: ["bdp"],
+    prePrompt:
+      "Fokus je na realizaciji. Ne prepricavaj ceo sastanak vec izvuci odluke, izvrsenje i blokere.",
+    prompt:
+      "Vrati status trenutnih akcija, nove akcije, odgovornu ulogu, prioritet i sta mora da bude zavrseno do sledeceg ciklusa.",
+    outputSections: ["Status akcija", "Nove akcije", "Prioritet", "Blokade"],
+    excludedFields: ["ime", "email", "telefon", "naziv firme"],
+  },
+  {
+    id: "risk-escalation-review",
+    name: "Risk review za menadzera",
+    reportType: "Risk review",
+    audience: "Interno",
+    description:
+      "Kada sastanak otvori rizike, kasnjenja ili potrebu za promenom eksperta, ovaj template pravi menadzerski pregled.",
+    programIds: ["master-mind", "bdp"],
+    prePrompt:
+      "Pisi kao operativni lead. Naglasi samo rizike, uticaj i preporuceni sledeci korak.",
+    prompt:
+      "Vrati rizike, dokaz iz razgovora, predlog ko treba da reaguje i da li je potreban transfer ili dodatni ekspert.",
+    outputSections: ["Rizici", "Uticaj", "Predlog reakcije", "Vlasnik"],
+    excludedFields: ["ime", "email", "telefon", "naziv firme"],
   },
 ];
 
@@ -239,7 +307,7 @@ export const staffUsers: StaffUser[] = [
   },
 ];
 
-export const clients: Client[] = [
+const rawClients: Omit<Client, "dataSources" | "customerServiceNotes">[] = [
   {
     id: "nikola-jovanovic",
     name: "Nikola Jovanovic",
@@ -1075,6 +1143,22 @@ export const clients: Client[] = [
     ],
   },
 ];
+
+export const clients: Client[] = rawClients.map((client) => ({
+  ...client,
+  assignments: client.assignments.map((assignment) => ({
+    ...assignment,
+    responsibility: assignment.responsibility ?? "Lead",
+  })),
+  dataSources: buildDefaultClientDataSources({
+    programId: client.programId,
+    programModules: client.programModules,
+    nextMilestone: client.nextMilestone,
+    stage: client.stage,
+    monthlyGoal: client.monthlyGoal,
+  }),
+  customerServiceNotes: buildDefaultCustomerServiceNotes(),
+}));
 
 export const clientPortalUsers: ClientPortalUser[] = [
   {

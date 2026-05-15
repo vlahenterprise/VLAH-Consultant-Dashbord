@@ -4,12 +4,22 @@ import {
   clientPortalUsers as seedClientPortalUsers,
   clients as seedClients,
   programs as seedPrograms,
+  reportTemplates as seedReportTemplates,
   staffUsers as seedStaffUsers,
   transferSuggestions as seedTransferSuggestions,
 } from "@/lib/mock-data";
 import {
+  buildDefaultClientDataSources,
+  buildDefaultCustomerServiceNotes,
+} from "@/lib/operations-defaults";
+import {
   AppData,
+  Client,
+  ClientDataSource,
+  CustomerServiceNote,
+  Meeting,
   NavigationItem,
+  ReportTemplate,
   StaffUser,
   WorkspaceActor,
 } from "@/lib/types";
@@ -23,7 +33,138 @@ function createSeedAppData(): AppData {
     clients: seedClients,
     clientPortalUsers: seedClientPortalUsers,
     transferSuggestions: seedTransferSuggestions,
+    reportTemplates: seedReportTemplates,
   });
+}
+
+function normalizeDataSource(
+  source: Partial<ClientDataSource> | undefined,
+  fallback: ClientDataSource,
+): ClientDataSource {
+  return {
+    ...fallback,
+    ...source,
+    metrics: Array.isArray(source?.metrics) ? source.metrics : fallback.metrics,
+  };
+}
+
+function normalizeMeeting(meeting: Partial<Meeting>): Meeting {
+  return {
+    id: meeting.id ?? "",
+    title: meeting.title ?? "",
+    date: meeting.date ?? meeting.scheduledStartAt ?? new Date().toISOString(),
+    scheduledStartAt: meeting.scheduledStartAt ?? new Date().toISOString(),
+    actualStartAt: meeting.actualStartAt ?? meeting.scheduledStartAt ?? new Date().toISOString(),
+    endedAt: meeting.endedAt ?? meeting.scheduledStartAt ?? new Date().toISOString(),
+    durationMinutes: meeting.durationMinutes ?? 60,
+    type: meeting.type ?? "Zoom",
+    modules: Array.isArray(meeting.modules) ? meeting.modules : [],
+    participants: Array.isArray(meeting.participants) ? meeting.participants : [],
+    status: meeting.status ?? "Zakazan",
+    clientOnTime: meeting.clientOnTime ?? true,
+    overran: meeting.overran ?? false,
+    emailSentToClient: meeting.emailSentToClient ?? false,
+    aiSummaryReady: meeting.aiSummaryReady ?? false,
+    summary: meeting.summary ?? "",
+    transcriptPreview: meeting.transcriptPreview ?? "",
+    actions: Array.isArray(meeting.actions) ? meeting.actions : [],
+    reportMeta: meeting.reportMeta,
+    recording: {
+      videoUrl: meeting.recording?.videoUrl ?? "#",
+      audioUrl: meeting.recording?.audioUrl ?? "#",
+      driveFolderUrl: meeting.recording?.driveFolderUrl ?? "#",
+      materialsUrl: meeting.recording?.materialsUrl ?? "#",
+      recordingsUrl: meeting.recording?.recordingsUrl ?? "#",
+    },
+  };
+}
+
+function normalizeClient(client: Partial<Client>): Client {
+  const fallbackSources = buildDefaultClientDataSources({
+    programId: client.programId ?? "master-mind",
+    programModules: Array.isArray(client.programModules) ? client.programModules : [],
+    nextMilestone: client.nextMilestone ?? "",
+    stage: client.stage ?? "",
+    monthlyGoal: client.monthlyGoal ?? "",
+  });
+
+  const nextSources = fallbackSources.map((fallback) => {
+    const source = client.dataSources?.find((item) => item.id === fallback.id);
+    return normalizeDataSource(source, fallback);
+  });
+
+  return {
+    id: client.id ?? "",
+    name: client.name ?? "",
+    company: client.company ?? "",
+    email: client.email ?? "",
+    phone: client.phone ?? "",
+    city: client.city ?? "",
+    timezone: client.timezone ?? "Europe/Belgrade",
+    startDate: client.startDate ?? new Date().toISOString(),
+    status: client.status ?? "Onboarding",
+    stage: client.stage ?? "",
+    riskLevel: client.riskLevel ?? "Nizak",
+    monthlyGoal: client.monthlyGoal ?? "",
+    notes: client.notes ?? "",
+    tags: Array.isArray(client.tags) ? client.tags : [],
+    programId: client.programId ?? "master-mind",
+    consultantId: client.consultantId ?? "",
+    managerId: client.managerId ?? "",
+    programModules: Array.isArray(client.programModules) ? client.programModules : [],
+    meetingAverageTarget: client.meetingAverageTarget ?? 4,
+    driveRootUrl: client.driveRootUrl ?? "",
+    assignments: Array.isArray(client.assignments)
+      ? client.assignments.map((assignment) => ({
+          consultantId: assignment.consultantId,
+          specialty: assignment.specialty,
+          module: assignment.module,
+          responsibility: assignment.responsibility ?? "Lead",
+        }))
+      : [],
+    analytics: {
+      healthScore: client.analytics?.healthScore ?? 0,
+      actionCompletion: client.analytics?.actionCompletion ?? 0,
+      meetingConsistency: client.analytics?.meetingConsistency ?? 0,
+      satisfactionScore: client.analytics?.satisfactionScore ?? 0,
+      revenueDelta: client.analytics?.revenueDelta ?? 0,
+      milestoneProgress: client.analytics?.milestoneProgress ?? 0,
+    },
+    revenueSnapshot: client.revenueSnapshot ?? "N/A",
+    nextMilestone: client.nextMilestone ?? "",
+    sharedActionBoard: Array.isArray(client.sharedActionBoard)
+      ? client.sharedActionBoard
+      : [],
+    dataSources: nextSources,
+    customerServiceNotes: Array.isArray(client.customerServiceNotes)
+      ? (client.customerServiceNotes as CustomerServiceNote[])
+      : buildDefaultCustomerServiceNotes(),
+    documents: Array.isArray(client.documents) ? client.documents : [],
+    resources: Array.isArray(client.resources) ? client.resources : [],
+    meetings: Array.isArray(client.meetings)
+      ? client.meetings.map(normalizeMeeting)
+      : [],
+  };
+}
+
+function normalizeAppData(payload: Partial<AppData>): AppData {
+  return {
+    programs: Array.isArray(payload.programs) ? payload.programs : seedPrograms,
+    staffUsers: Array.isArray(payload.staffUsers) ? payload.staffUsers : seedStaffUsers,
+    clients: Array.isArray(payload.clients)
+      ? payload.clients.map(normalizeClient)
+      : seedClients.map(normalizeClient),
+    clientPortalUsers: Array.isArray(payload.clientPortalUsers)
+      ? payload.clientPortalUsers
+      : seedClientPortalUsers,
+    transferSuggestions: Array.isArray(payload.transferSuggestions)
+      ? payload.transferSuggestions
+      : seedTransferSuggestions,
+    reportTemplates:
+      Array.isArray(payload.reportTemplates) && payload.reportTemplates.length
+        ? (payload.reportTemplates as ReportTemplate[])
+        : seedReportTemplates,
+  };
 }
 
 async function ensureSnapshotTable() {
@@ -63,7 +204,7 @@ async function loadOrSeedSnapshot() {
   `;
 
   if (existing[0]?.payload) {
-    return existing[0].payload;
+    return normalizeAppData(existing[0].payload);
   }
 
   const seedData = createSeedAppData();
@@ -97,10 +238,10 @@ async function persistSnapshot(payload: AppData) {
 
 export const loadAppData = cache(async (): Promise<AppData> => {
   if (!hasDatabase()) {
-    return createSeedAppData();
+    return normalizeAppData(createSeedAppData());
   }
 
-  return loadOrSeedSnapshot();
+  return normalizeAppData(await loadOrSeedSnapshot());
 });
 
 export async function updateAppData(

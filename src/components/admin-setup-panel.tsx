@@ -17,9 +17,11 @@ import {
   IntegrationStatus,
   MeetingTemplate,
   Program,
+  ReportTemplate,
   ReminderRule,
   StaffUser,
 } from "@/lib/types";
+import { ReportTemplateManager } from "@/components/report-template-manager";
 import { StatusChip } from "@/components/status-chip";
 
 type IntegrationState = IntegrationBlueprint & {
@@ -33,6 +35,7 @@ type AdminSetupPanelProps = {
   staffUsers: StaffUser[];
   programs: Program[];
   integrations: IntegrationState[];
+  reportTemplates: ReportTemplate[];
   meetingTemplates: MeetingTemplate[];
   reminderRules: ReminderRule[];
   importBlueprints: ImportBlueprint[];
@@ -226,6 +229,7 @@ export function AdminSetupPanel({
   staffUsers,
   programs,
   integrations,
+  reportTemplates,
   meetingTemplates,
   reminderRules,
   importBlueprints,
@@ -626,6 +630,8 @@ export function AdminSetupPanel({
           </div>
         </div>
       </div>
+
+      <ReportTemplateManager reportTemplates={reportTemplates} />
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="brand-item p-5">
