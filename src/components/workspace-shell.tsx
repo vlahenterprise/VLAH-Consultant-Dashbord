@@ -76,6 +76,7 @@ export function WorkspaceShell({
                 alt="VLAH Enterprise"
                 width={46}
                 height={46}
+                priority
                 className="h-full w-full object-contain"
               />
             </div>
