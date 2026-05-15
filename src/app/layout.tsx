@@ -32,6 +32,7 @@ export default function RootLayout({
             src="/branding/vlah-enterprise-dark.svg"
             alt=""
             fill
+            priority
             sizes="(max-width: 768px) 420px, 620px"
           />
         </div>
