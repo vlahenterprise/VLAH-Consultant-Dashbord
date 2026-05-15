@@ -8,6 +8,15 @@ export type NavGroup = "work" | "personal" | "admin";
 export type AssignmentResponsibility = "Lead" | "Support";
 export type ClientSourceStatus = "Povezano" | "Rucno" | "Ceka sync";
 export type ReportAudience = "Interno" | "Klijent" | "Interno + klijent";
+export type IntegrationId =
+  | "zoom"
+  | "thinkific"
+  | "optiverse"
+  | "drive"
+  | "openai"
+  | "email";
+export type IntegrationRunStatus = "Uspeh" | "Ceka setup" | "Greska";
+export type AutomationDispatchStatus = "Poslato" | "Ceka setup" | "Greska";
 export type WorkspaceSection =
   | "overview"
   | "clients"
@@ -48,7 +57,7 @@ export type Program = {
 export type IntegrationStatus = "Connected" | "Needs setup" | "Planned";
 
 export type IntegrationBlueprint = {
-  id: string;
+  id: IntegrationId;
   title: string;
   category: string;
   description: string;
@@ -372,6 +381,43 @@ export type MeetingReportMeta = {
   savedAt: string;
 };
 
+export type IntegrationRun = {
+  id: string;
+  integrationId: IntegrationId;
+  clientId?: string;
+  clientName?: string;
+  status: IntegrationRunStatus;
+  startedAt: string;
+  finishedAt: string;
+  summary: string;
+  details: string[];
+};
+
+export type AutomationQueueItem = {
+  id: string;
+  ruleId: string;
+  clientId: string;
+  clientName: string;
+  audience: string;
+  trigger: string;
+  scheduledFor: string;
+  summary: string;
+  relatedActionId?: string;
+  relatedMeetingId?: string;
+};
+
+export type AutomationDispatchLog = {
+  id: string;
+  queueItemId: string;
+  ruleId: string;
+  clientId: string;
+  clientName: string;
+  audience: string;
+  status: AutomationDispatchStatus;
+  summary: string;
+  sentAt: string;
+};
+
 export type AppData = {
   programs: Program[];
   staffUsers: StaffUser[];
@@ -379,4 +425,6 @@ export type AppData = {
   clientPortalUsers: ClientPortalUser[];
   transferSuggestions: TransferSuggestion[];
   reportTemplates: ReportTemplate[];
+  integrationRuns: IntegrationRun[];
+  automationDispatchLog: AutomationDispatchLog[];
 };

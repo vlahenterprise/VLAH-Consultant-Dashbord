@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
+import { LogoutButton } from "@/components/logout-button";
 import { canAccessAdmin, canTransferClients } from "@/lib/permissions";
 import {
   NavigationItem,
@@ -169,12 +170,12 @@ export function WorkspaceShell({
           </nav>
 
           <div className="mt-auto grid gap-2">
-            <Link href="/login/staff" className="brand-button-secondary">
-              Zaposleni
-            </Link>
-            <Link href="/login/client" className="brand-button-secondary">
-              Klijenti
-            </Link>
+            {actor.kind === "staff" ? (
+              <Link href="/clients" className="brand-button-secondary">
+                Baza klijenata
+              </Link>
+            ) : null}
+            <LogoutButton className="brand-button-secondary" />
           </div>
         </div>
       </aside>

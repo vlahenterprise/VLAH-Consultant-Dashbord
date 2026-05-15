@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { isAuthApiError, requireAdminApiAccess } from "@/lib/auth";
 import { updateReportTemplate } from "@/lib/admin-mutations";
 
 export async function PUT(request: Request) {
   try {
+    await requireAdminApiAccess();
     const body = await request.json();
 
     if (!body.templateId || !body.name || !body.reportType || !body.prePrompt || !body.prompt) {
@@ -28,6 +30,10 @@ export async function PUT(request: Request) {
       templateCount: result.reportTemplates.length,
     });
   } catch (error) {
+    if (isAuthApiError(error)) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
     const message =
       error instanceof Error ? error.message : "Neuspesan update report templata.";
 

@@ -8,6 +8,7 @@ import {
   meetingTemplates,
   reminderRules,
 } from "@/lib/admin-blueprints";
+import { getPendingAutomationQueue } from "@/lib/automation-center";
 import { getProgramPlaybook } from "@/lib/operating-model";
 import {
   getActionCompletionPercent,
@@ -959,6 +960,12 @@ function AdminSection({
         staffUsers={data.staffUsers}
         programs={data.programs}
         integrations={integrations}
+        integrationRuns={data.integrationRuns}
+        automationQueue={getPendingAutomationQueue(
+          data.clients,
+          data.automationDispatchLog,
+        )}
+        automationHistory={data.automationDispatchLog}
         reportTemplates={data.reportTemplates}
         meetingTemplates={meetingTemplates}
         reminderRules={reminderRules}

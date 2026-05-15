@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { isAuthApiError, requireAdminApiAccess } from "@/lib/auth";
 import { createClient } from "@/lib/admin-mutations";
 
 export async function POST(request: Request) {
   try {
+    await requireAdminApiAccess();
     const body = await request.json();
 
     if (!body.name || !body.company || !body.email || !body.programId) {
@@ -29,6 +31,10 @@ export async function POST(request: Request) {
       clientCount: result.clients.length,
     });
   } catch (error) {
+    if (isAuthApiError(error)) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
     const message =
       error instanceof Error ? error.message : "Neuspesno kreiranje klijenta.";
 

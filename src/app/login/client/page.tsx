@@ -1,75 +1,47 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { SectionCard } from "@/components/section-card";
-import { StatusChip } from "@/components/status-chip";
+import { LoginPanel } from "@/components/login-panel";
 import { getClientById, getProgramById, loadAppData } from "@/lib/app-data";
+import { getActorHomeHref, getAuthenticatedActor, getDemoPasswordForMode } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClientLoginPage() {
   const data = await loadAppData();
+  const actor = await getAuthenticatedActor(data);
+
+  if (actor) {
+    redirect(getActorHomeHref(actor));
+  }
 
   return (
     <AppShell>
-      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <SectionCard
-          eyebrow="Klijenti"
-          title="Poseban portal za klijente"
-          description="Klijent vidi samo svoju karticu, sastanke, akcije i materijale."
-        >
-          <div className="grid gap-4">
-            <input className="brand-input" placeholder="Email klijenta" />
-            <input
-              className="brand-input"
-              placeholder="Lozinka"
-              type="password"
-            />
-            <button type="button" className="brand-button">
-              Nastavi
-            </button>
-            <p className="text-sm text-muted">
-              Trenutno koristi kartice desno za ulaz. Svaki portal je odvojen po klijentu.
-            </p>
-          </div>
-        </SectionCard>
+      <LoginPanel
+        mode="client"
+        introEyebrow="Klijenti"
+        introTitle="Ulaz u portal klijenta"
+        introDescription="Klijent vidi samo svoju karticu, svoje akcije, svoje sastanke i materijale koji su mu podeljeni."
+        listEyebrow="Brzi ulaz"
+        listTitle="Portali klijenata"
+        listDescription="Svaki portal je odvojen i vodi samo na program i evidenciju tog klijenta."
+        defaultPassword={getDemoPasswordForMode("client")}
+        accounts={data.clientPortalUsers.map((user) => {
+          const client = getClientById(data, user.clientId);
+          const program = client ? getProgramById(data, client.programId) : null;
 
-        <SectionCard
-          eyebrow="Portali"
-          title="Izaberi klijenta"
-          description="Svaki klijent ulazi samo u svoj program i svoje zadatke."
-        >
-          <div className="grid gap-3">
-            {data.clientPortalUsers.map((user) => {
-              const client = getClientById(data, user.clientId);
-              const program = client ? getProgramById(data, client.programId) : null;
-
-              return (
-                <Link
-                  key={user.id}
-                  href={`/workspace/${user.id}`}
-                  className="brand-item flex flex-wrap items-center justify-between gap-3 p-5 transition hover:-translate-y-0.5"
-                >
-                  <div>
-                    <p className="text-lg font-semibold text-foreground">
-                      {user.name}
-                    </p>
-                    <p className="text-sm text-muted">{user.company}</p>
-                    <p className="mt-1 text-sm text-muted">
-                      Program: {program?.name ?? "nije povezano"}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <StatusChip label="Portal klijenta" tone="success" />
-                    {client ? (
-                      <StatusChip label={client.stage} tone="neutral" />
-                    ) : null}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </SectionCard>
-      </div>
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            secondary: user.company,
+            tertiary: `Program: ${program?.name ?? "nije povezano"}`,
+            badges: [
+              { label: "Portal klijenta", tone: "success" as const },
+              ...(client ? [{ label: client.stage, tone: "neutral" as const }] : []),
+            ],
+          };
+        })}
+      />
     </AppShell>
   );
 }

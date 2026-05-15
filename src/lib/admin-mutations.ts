@@ -1,8 +1,12 @@
-import { getMeetingTemplatesForProgram } from "@/lib/admin-blueprints";
+import {
+  getMeetingTemplatesForProgram,
+  integrationBlueprints,
+} from "@/lib/admin-blueprints";
 import {
   generateMeetingReportPreview,
   mergeSuggestedActions,
 } from "@/lib/ai-reporting";
+import { getPendingAutomationQueue } from "@/lib/automation-center";
 import {
   getProgramById,
   updateAppData,
@@ -13,11 +17,14 @@ import {
 } from "@/lib/operations-defaults";
 import {
   AppData,
+  AutomationDispatchLog,
   BdpImportRow,
   Client,
   ClientAssignment,
   ClientDataSource,
   EmployeeRole,
+  IntegrationId,
+  IntegrationRun,
   MeetingAction,
   Meeting,
   MeetingReportPreview,
@@ -117,6 +124,15 @@ type UpsertClientMeetingInput = {
   recordingsUrl: string;
 };
 
+type RunIntegrationSyncInput = {
+  integrationId: IntegrationId;
+  clientId?: string;
+};
+
+type DispatchAutomationInput = {
+  queueItemId: string;
+};
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -133,6 +149,15 @@ function buildId(prefix: string, value: string) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function buildIntegrationRun(
+  input: Omit<IntegrationRun, "id">,
+): IntegrationRun {
+  return {
+    id: buildId("integration-run", `${input.integrationId}-${input.clientId ?? "global"}`),
+    ...input,
+  };
 }
 
 function toTitleFromModule(module: string) {
@@ -480,6 +505,19 @@ function rebuildStaffClientIndex(draft: AppData) {
       };
     })(),
   }));
+}
+
+function getIntegrationBlueprint(integrationId: IntegrationId) {
+  return integrationBlueprints.find((integration) => integration.id === integrationId);
+}
+
+function getMissingEnvKeys(integrationId: IntegrationId) {
+  const blueprint = getIntegrationBlueprint(integrationId);
+  if (!blueprint) {
+    return [];
+  }
+
+  return blueprint.envKeys.filter((key) => !process.env[key]);
 }
 
 function buildInitialMeetings(
@@ -1172,6 +1210,218 @@ export async function upsertClientMeeting(input: UpsertClientMeetingInput) {
           new Date(left.scheduledStartAt).getTime() -
           new Date(right.scheduledStartAt).getTime(),
       );
+    }
+
+    rebuildStaffClientIndex(draft);
+    return draft;
+  });
+}
+
+export async function runIntegrationSync(input: RunIntegrationSyncInput) {
+  return updateAppData((draft) => {
+    const missingEnvKeys = getMissingEnvKeys(input.integrationId);
+    const now = new Date().toISOString();
+    const client = input.clientId
+      ? draft.clients.find((item) => item.id === input.clientId)
+      : undefined;
+
+    if (input.clientId && !client) {
+      throw new Error("Klijent za sync nije pronadjen.");
+    }
+
+    const details: string[] = [];
+    let summary = "Manual sync je obradjen.";
+    let status: IntegrationRun["status"] = missingEnvKeys.length
+      ? "Ceka setup"
+      : "Uspeh";
+
+    if (input.integrationId === "thinkific" && client) {
+      const source = client.dataSources.find((item) => item.id === "thinkific");
+      if (source) {
+        if (missingEnvKeys.length) {
+          source.status = "Ceka sync";
+          details.push(`Nedostaju kljucevi: ${missingEnvKeys.join(", ")}`);
+        } else {
+          source.status = "Povezano";
+          source.externalId = source.externalId || `thinkific-${client.id}`;
+          source.owner = "Customer Service";
+          source.summary =
+            "Thinkific profil je osvezen i spreman da puni portal napretkom kroz edukativni deo programa.";
+          source.metrics = [
+            `Program mapiran: ${client.programId}`,
+            `Klijent portal spreman za progress signal`,
+            `Moduli: ${client.programModules.join(" / ")}`,
+          ];
+          source.lastSyncedAt = now;
+          details.push("Thinkific profil i progress metadata su osvezeni.");
+        }
+      }
+
+      summary = missingEnvKeys.length
+        ? "Thinkific sync ceka setup kredencijala."
+        : "Thinkific sync je osvezen za klijenta.";
+    }
+
+    if (input.integrationId === "optiverse" && client) {
+      const source = client.dataSources.find((item) => item.id === "ops-system");
+      if (source) {
+        if (missingEnvKeys.length) {
+          source.status = "Rucno";
+          details.push(`Nedostaju kljucevi: ${missingEnvKeys.join(", ")}`);
+        } else {
+          source.status = "Povezano";
+          source.externalId = source.externalId || `optiverse-${client.id}`;
+          source.owner = "Customer Service";
+          source.summary =
+            "Optiverse profil je povezan i sada vraca operativni milestone, handoff signal i prioritetne napomene za tim.";
+          source.metrics = [
+            `Stage: ${client.stage}`,
+            `Milestone: ${client.nextMilestone}`,
+            `Goal: ${client.monthlyGoal}`,
+          ];
+          source.lastSyncedAt = now;
+          details.push("Optiverse profil je povezan na karticu klijenta.");
+        }
+      }
+
+      summary = missingEnvKeys.length
+        ? "Optiverse sync ceka setup kredencijala."
+        : "Optiverse signal je osvezen za klijenta.";
+    }
+
+    if (input.integrationId === "zoom" && client) {
+      const upcomingMeetings = client.meetings.filter(
+        (meeting) => meeting.status === "Zakazan",
+      );
+
+      if (missingEnvKeys.length) {
+        details.push(`Nedostaju kljucevi: ${missingEnvKeys.join(", ")}`);
+        summary = "Zoom sync ceka setup kredencijala.";
+      } else {
+        details.push(
+          `Pronadjeno zakazanih sastanaka za sync: ${upcomingMeetings.length}.`,
+        );
+        upcomingMeetings.slice(0, 3).forEach((meeting) => {
+          meeting.summary =
+            "Zoom termin je potvrdjen. Posle sastanka recording i AI tok mogu da dopune karticu klijenta.";
+        });
+        summary = "Zoom metadata sync je osvezen za zakazane sastanke.";
+      }
+    }
+
+    if (input.integrationId === "drive" && client) {
+      if (missingEnvKeys.length) {
+        details.push(`Nedostaju kljucevi: ${missingEnvKeys.join(", ")}`);
+        summary = "Drive sync ceka setup kredencijala.";
+      } else {
+        client.meetings = client.meetings.map((meeting) => ({
+          ...meeting,
+          recording: {
+            ...meeting.recording,
+            driveFolderUrl:
+              meeting.recording.driveFolderUrl === "#"
+                ? `${client.driveRootUrl}/meetings/${meeting.id}`
+                : meeting.recording.driveFolderUrl,
+            materialsUrl:
+              meeting.recording.materialsUrl === "#"
+                ? `${client.driveRootUrl}/materials/${meeting.id}`
+                : meeting.recording.materialsUrl,
+            recordingsUrl:
+              meeting.recording.recordingsUrl === "#"
+                ? `${client.driveRootUrl}/recordings/${meeting.id}`
+                : meeting.recording.recordingsUrl,
+          },
+        }));
+        details.push("Drive putanje po sastancima su osvezene.");
+        summary = "Drive lokacije su osvezene za klijenta.";
+      }
+    }
+
+    if (input.integrationId === "openai" && client) {
+      const pendingMeetings = client.meetings.filter(
+        (meeting) => meeting.status !== "Zakazan" && !meeting.aiSummaryReady,
+      );
+      if (missingEnvKeys.length) {
+        details.push(`Nedostaju kljucevi: ${missingEnvKeys.join(", ")}`);
+        summary = "OpenAI sync ceka setup API kljuca.";
+      } else {
+        details.push(`Sastanci spremni za AI obradu: ${pendingMeetings.length}.`);
+        summary = "OpenAI pipeline je spreman za obradu dostupnih audio i transcript signala.";
+      }
+    }
+
+    if (input.integrationId === "email" && client) {
+      const pendingQueue = getPendingAutomationQueue([client], draft.automationDispatchLog);
+      if (missingEnvKeys.length) {
+        details.push(`Nedostaju kljucevi: ${missingEnvKeys.join(", ")}`);
+        summary = "Email automation ceka setup provider kljuceva.";
+      } else {
+        details.push(`Pending email stavki u queue-u: ${pendingQueue.length}.`);
+        summary = "Email automation je spreman i queue je osvezen.";
+      }
+    }
+
+    if (status === "Uspeh" && missingEnvKeys.length) {
+      status = "Ceka setup";
+    }
+
+    draft.integrationRuns = [
+      buildIntegrationRun({
+        integrationId: input.integrationId,
+        clientId: client?.id,
+        clientName: client?.name,
+        status,
+        startedAt: now,
+        finishedAt: now,
+        summary,
+        details,
+      }),
+      ...draft.integrationRuns,
+    ].slice(0, 40);
+
+    rebuildStaffClientIndex(draft);
+    return draft;
+  });
+}
+
+export async function dispatchAutomation(input: DispatchAutomationInput) {
+  return updateAppData((draft) => {
+    const queue = getPendingAutomationQueue(draft.clients, draft.automationDispatchLog);
+    const item = queue.find((entry) => entry.id === input.queueItemId);
+    if (!item) {
+      throw new Error("Automation stavka vise nije dostupna za slanje.");
+    }
+
+    const missingEnvKeys = getMissingEnvKeys("email");
+    const sentAt = new Date().toISOString();
+    const status: AutomationDispatchLog["status"] = missingEnvKeys.length
+      ? "Ceka setup"
+      : "Poslato";
+    const summary = missingEnvKeys.length
+      ? `${item.summary} / email provider nije povezan`
+      : `${item.summary} / email je oznacen kao poslat iz outbox-a`;
+
+    draft.automationDispatchLog = [
+      {
+        id: buildId("automation-log", item.id),
+        queueItemId: item.id,
+        ruleId: item.ruleId,
+        clientId: item.clientId,
+        clientName: item.clientName,
+        audience: item.audience,
+        status,
+        summary,
+        sentAt,
+      },
+      ...draft.automationDispatchLog,
+    ].slice(0, 80);
+
+    if (status === "Poslato" && item.ruleId === "meeting-report" && item.relatedMeetingId) {
+      const client = draft.clients.find((entry) => entry.id === item.clientId);
+      const meeting = client?.meetings.find((entry) => entry.id === item.relatedMeetingId);
+      if (meeting) {
+        meeting.emailSentToClient = true;
+      }
     }
 
     rebuildStaffClientIndex(draft);

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAuthApiError, requireStaffApiClientAccess } from "@/lib/auth";
 import {
   saveClientActionBoard,
   upsertClientMeeting,
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
     }
 
     if (body.action === "updateAssignments") {
+      await requireStaffApiClientAccess(body.clientId, { managerOnly: true });
       const result = await updateClientAssignments({
         clientId: body.clientId,
         assignments: Array.isArray(body.assignments) ? body.assignments : [],
@@ -30,6 +32,7 @@ export async function POST(request: Request) {
     }
 
     if (body.action === "updateDataSources") {
+      await requireStaffApiClientAccess(body.clientId);
       const result = await updateClientDataSources({
         clientId: body.clientId,
         dataSources: Array.isArray(body.dataSources) ? body.dataSources : [],
@@ -45,6 +48,7 @@ export async function POST(request: Request) {
     }
 
     if (body.action === "saveActionBoard") {
+      await requireStaffApiClientAccess(body.clientId);
       const result = await saveClientActionBoard({
         clientId: body.clientId,
         scope: body.scope === "shared" ? "shared" : "meeting",
@@ -59,6 +63,7 @@ export async function POST(request: Request) {
     }
 
     if (body.action === "upsertMeeting") {
+      await requireStaffApiClientAccess(body.clientId);
       const result = await upsertClientMeeting({
         clientId: body.clientId,
         meetingId: body.meetingId,
@@ -88,6 +93,10 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   } catch (error) {
+    if (isAuthApiError(error)) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
     const message =
       error instanceof Error ? error.message : "Neuspesna operativna izmena klijenta.";
 

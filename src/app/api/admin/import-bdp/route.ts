@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { isAuthApiError, requireAdminApiAccess } from "@/lib/auth";
 import { importBdpSchedule } from "@/lib/admin-mutations";
 import { BdpImportRow } from "@/lib/types";
 
 export async function POST(request: Request) {
   try {
+    await requireAdminApiAccess();
     const body = await request.json();
     const rows = (Array.isArray(body.rows) ? body.rows : []) as BdpImportRow[];
 
@@ -31,6 +33,10 @@ export async function POST(request: Request) {
       clientCount: result.clients.length,
     });
   } catch (error) {
+    if (isAuthApiError(error)) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
     const message =
       error instanceof Error ? error.message : "Neuspesan BDP import.";
 

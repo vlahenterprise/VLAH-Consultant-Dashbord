@@ -9,11 +9,15 @@ import {
   staffIntakeFields,
 } from "@/lib/operating-model";
 import {
+  AutomationDispatchLog,
+  AutomationQueueItem,
   BdpImportRow,
   ChipTone,
   Client,
   ImportBlueprint,
   IntegrationBlueprint,
+  IntegrationId,
+  IntegrationRun,
   IntegrationStatus,
   MeetingTemplate,
   Program,
@@ -35,6 +39,9 @@ type AdminSetupPanelProps = {
   staffUsers: StaffUser[];
   programs: Program[];
   integrations: IntegrationState[];
+  integrationRuns: IntegrationRun[];
+  automationQueue: AutomationQueueItem[];
+  automationHistory: AutomationDispatchLog[];
   reportTemplates: ReportTemplate[];
   meetingTemplates: MeetingTemplate[];
   reminderRules: ReminderRule[];
@@ -229,6 +236,9 @@ export function AdminSetupPanel({
   staffUsers,
   programs,
   integrations,
+  integrationRuns,
+  automationQueue,
+  automationHistory,
   reportTemplates,
   meetingTemplates,
   reminderRules,
@@ -244,7 +254,15 @@ export function AdminSetupPanel({
   const [clientFeedback, setClientFeedback] = useState<string>("");
   const [staffFeedback, setStaffFeedback] = useState<string>("");
   const [importFeedback, setImportFeedback] = useState<string>("");
+  const [syncFeedback, setSyncFeedback] = useState<string>("");
+  const [automationFeedback, setAutomationFeedback] = useState<string>("");
   const [importRows, setImportRows] = useState<BdpImportRow[]>([]);
+  const [selectedSyncClientId, setSelectedSyncClientId] = useState<string>(
+    clients[0]?.id ?? "",
+  );
+  const [selectedIntegrationId, setSelectedIntegrationId] = useState<IntegrationId>(
+    integrations[0]?.id ?? "zoom",
+  );
   const deferredImportRows = useDeferredValue(importRows);
 
   const selectedProgram =
@@ -266,6 +284,8 @@ export function AdminSetupPanel({
       Number(Boolean(row.hrLeadershipAt)),
     0,
   );
+  const recentRuns = integrationRuns.slice(0, 8);
+  const recentAutomationHistory = automationHistory.slice(0, 8);
   const setupSteps = [
     {
       label: "1. Program",
@@ -460,6 +480,79 @@ export function AdminSetupPanel({
     })();
   }
 
+  function handleIntegrationSync() {
+    setSyncFeedback("");
+    setPendingAction("import");
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/admin/integrations/sync", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            integrationId: selectedIntegrationId,
+            clientId: selectedSyncClientId || undefined,
+          }),
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok) {
+          setSyncFeedback(payload.error || "Sync nije uspeo.");
+          return;
+        }
+
+        setSyncFeedback(
+          `Sync je evidentiran. Ukupno run-ova u istoriji: ${payload.runCount}.`,
+        );
+        startTransition(() => {
+          router.refresh();
+        });
+      } catch {
+        setSyncFeedback("Doslo je do greske pri sync zahtevu.");
+      } finally {
+        setPendingAction("");
+      }
+    })();
+  }
+
+  function handleAutomationDispatch(queueItemId: string) {
+    setAutomationFeedback("");
+    setPendingAction("staff");
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/admin/automation-dispatch", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ queueItemId }),
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok) {
+          setAutomationFeedback(payload.error || "Slanje automation stavke nije uspelo.");
+          return;
+        }
+
+        setAutomationFeedback(
+          `Automation stavka je obradjena. Istorija sada ima ${payload.historyCount} zapisa.`,
+        );
+        startTransition(() => {
+          router.refresh();
+        });
+      } catch {
+        setAutomationFeedback("Doslo je do greske pri automation slanju.");
+      } finally {
+        setPendingAction("");
+      }
+    })();
+  }
+
   return (
     <div className="grid gap-4">
       <div className="brand-item p-5">
@@ -626,6 +719,201 @@ export function AdminSetupPanel({
                   <p className="mt-2 text-sm leading-6 text-muted">{rule.description}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <div className="brand-item p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-semibold text-foreground">
+                Manual sync centar
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted">
+                Rucno osvezavanje integracija po klijentu, sa jasnim logom sta je uradjeno i sta jos ceka setup.
+              </p>
+            </div>
+            <StatusChip label={`${recentRuns.length} skorasnjih run-ova`} tone="accent" />
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <select
+              className="brand-input"
+              value={selectedIntegrationId}
+              onChange={(event) =>
+                setSelectedIntegrationId(event.target.value as IntegrationId)
+              }
+            >
+              {integrations.map((integration) => (
+                <option key={integration.id} value={integration.id}>
+                  {integration.title}
+                </option>
+              ))}
+            </select>
+            <select
+              className="brand-input"
+              value={selectedSyncClientId}
+              onChange={(event) => setSelectedSyncClientId(event.target.value)}
+            >
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name} / {client.company}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="brand-button disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={pendingAction !== ""}
+              onClick={handleIntegrationSync}
+            >
+              Pokreni manual sync
+            </button>
+            {syncFeedback ? <p className="text-sm text-muted">{syncFeedback}</p> : null}
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            {recentRuns.length ? (
+              recentRuns.map((run) => (
+                <div
+                  key={run.id}
+                  className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        {run.integrationId} {run.clientName ? `/ ${run.clientName}` : ""}
+                      </p>
+                      <p className="mt-1 text-sm text-muted">{run.summary}</p>
+                    </div>
+                    <StatusChip
+                      label={run.status}
+                      tone={
+                        run.status === "Uspeh"
+                          ? "success"
+                          : run.status === "Ceka setup"
+                            ? "warning"
+                            : "danger"
+                      }
+                    />
+                  </div>
+                  <p className="mt-2 text-sm text-muted">
+                    {new Date(run.finishedAt).toLocaleString("sr-RS")}
+                  </p>
+                  {run.details.length ? (
+                    <div className="mt-3 space-y-2 text-sm text-muted">
+                      {run.details.map((detail) => (
+                        <p key={detail}>- {detail}</p>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted">
+                Jos nema evidentiranih sync run-ova.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="brand-item p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-semibold text-foreground">
+                Reminder i email outbox
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted">
+                Pending queue pokazuje sta ceka slanje, a istorija cuva sta je vec obradjeno.
+              </p>
+            </div>
+            <StatusChip label={`${automationQueue.length} pending`} tone="accent" />
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            {automationQueue.length ? (
+              automationQueue.slice(0, 8).map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        {item.ruleId} / {item.clientName}
+                      </p>
+                      <p className="mt-1 text-sm text-muted">{item.summary}</p>
+                    </div>
+                    <StatusChip label={item.trigger} tone="neutral" />
+                  </div>
+                  <p className="mt-2 text-sm text-muted">
+                    {item.audience} / zakazano {new Date(item.scheduledFor).toLocaleString("sr-RS")}
+                  </p>
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      className="brand-button-secondary disabled:cursor-not-allowed disabled:opacity-70"
+                      disabled={pendingAction !== ""}
+                      onClick={() => handleAutomationDispatch(item.id)}
+                    >
+                      Oznaci kao poslato
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted">
+                Trenutno nema pending automation stavki.
+              </p>
+            )}
+          </div>
+
+          {automationFeedback ? (
+            <p className="mt-4 text-sm text-muted">{automationFeedback}</p>
+          ) : null}
+
+          <div className="mt-5 rounded-[18px] border border-white/8 bg-black/12 px-4 py-4">
+            <p className="font-semibold text-foreground">Skorasnja istorija</p>
+            <div className="mt-3 grid gap-3">
+              {recentAutomationHistory.length ? (
+                recentAutomationHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          {item.ruleId} / {item.clientName}
+                        </p>
+                        <p className="mt-1 text-sm text-muted">{item.summary}</p>
+                      </div>
+                      <StatusChip
+                        label={item.status}
+                        tone={
+                          item.status === "Poslato"
+                            ? "success"
+                            : item.status === "Ceka setup"
+                              ? "warning"
+                              : "danger"
+                        }
+                      />
+                    </div>
+                    <p className="mt-2 text-sm text-muted">
+                      {item.audience} / {new Date(item.sentAt).toLocaleString("sr-RS")}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted">
+                  Istorija slanja je trenutno prazna.
+                </p>
+              )}
             </div>
           </div>
         </div>

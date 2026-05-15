@@ -1213,6 +1213,10 @@ export const transferSuggestions: TransferSuggestion[] = [
   },
 ];
 
+export const integrationRuns = [];
+
+export const automationDispatchLog = [];
+
 export const workspaceActors: WorkspaceActor[] = [
   ...staffUsers,
   ...clientPortalUsers,

@@ -9,7 +9,8 @@ import {
   getClientOpenActions,
 } from "@/lib/client-utils";
 import { formatDate, formatDateTime } from "@/lib/formatting";
-import { getProgramById, loadAppData } from "@/lib/app-data";
+import { getProgramById, getVisibleClientsForActor } from "@/lib/app-data";
+import { requireStaffWorkspace } from "@/lib/auth";
 
 type ClientsPageProps = {
   searchParams?: Promise<{
@@ -25,14 +26,15 @@ function normalizeFilter(value?: string) {
 }
 
 export default async function ClientsPage({ searchParams }: ClientsPageProps) {
-  const data = await loadAppData();
+  const { data, actor } = await requireStaffWorkspace();
   const filters = (await searchParams) ?? {};
   const searchValue = normalizeFilter(filters.q);
   const selectedProgram = filters.program ?? "all";
   const selectedRisk = filters.risk ?? "all";
   const selectedStatus = filters.status ?? "all";
 
-  const filteredClients = data.clients.filter((client) => {
+  const visibleClients = getVisibleClientsForActor(data, actor);
+  const filteredClients = visibleClients.filter((client) => {
     const matchesSearch =
       !searchValue ||
       [
@@ -121,7 +123,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                   {filteredClients.length}
                 </p>
                 <p className="mt-2 text-sm text-muted">
-                  od ukupno {data.clients.length} klijenata
+                  od ukupno {visibleClients.length} vidljivih klijenata
                 </p>
               </div>
               <div className="brand-kpi">

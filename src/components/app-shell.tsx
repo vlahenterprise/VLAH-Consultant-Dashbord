@@ -1,16 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
+import { LogoutButton } from "@/components/logout-button";
 import { StatusChip } from "@/components/status-chip";
+import { getActorHomeHref, getAuthenticatedActor } from "@/lib/auth";
 
-const navigation = [
+const defaultNavigation = [
   { href: "/", label: "Pocetna" },
   { href: "/login/staff", label: "Zaposleni" },
   { href: "/login/client", label: "Klijenti" },
   { href: "/clients", label: "Baza klijenata" },
 ];
 
-export function AppShell({ children }: { children: ReactNode }) {
+export async function AppShell({ children }: { children: ReactNode }) {
+  const actor = await getAuthenticatedActor();
+  const navigation = actor
+    ? [
+        { href: getActorHomeHref(actor), label: actor.kind === "client" ? "Moj portal" : "Moj workspace" },
+        ...(actor.kind === "staff"
+          ? [{ href: "/clients", label: "Baza klijenata" }]
+          : []),
+      ]
+    : defaultNavigation;
+
   return (
     <div className="app-page">
       <div className="public-stack">
@@ -51,6 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {item.label}
                 </Link>
               ))}
+              {actor ? <LogoutButton /> : null}
             </nav>
           </div>
         </header>

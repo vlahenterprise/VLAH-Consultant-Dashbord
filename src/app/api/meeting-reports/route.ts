@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAuthApiError, requireStaffApiClientAccess } from "@/lib/auth";
 import { saveMeetingReport } from "@/lib/admin-mutations";
 
 export async function POST(request: Request) {
@@ -23,6 +24,8 @@ export async function POST(request: Request) {
       );
     }
 
+    await requireStaffApiClientAccess(body.clientId);
+
     const result = await saveMeetingReport({
       clientId: body.clientId,
       meetingId: body.meetingId,
@@ -44,6 +47,10 @@ export async function POST(request: Request) {
       clientCount: result.clients.length,
     });
   } catch (error) {
+    if (isAuthApiError(error)) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
     const message =
       error instanceof Error ? error.message : "Neuspesno cuvanje izvestaja.";
 

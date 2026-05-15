@@ -1,8 +1,10 @@
 import { cache } from "react";
 import { hasDatabase, sql } from "@/lib/db";
 import {
+  automationDispatchLog as seedAutomationDispatchLog,
   clientPortalUsers as seedClientPortalUsers,
   clients as seedClients,
+  integrationRuns as seedIntegrationRuns,
   programs as seedPrograms,
   reportTemplates as seedReportTemplates,
   staffUsers as seedStaffUsers,
@@ -14,9 +16,11 @@ import {
 } from "@/lib/operations-defaults";
 import {
   AppData,
+  AutomationDispatchLog,
   Client,
   ClientDataSource,
   CustomerServiceNote,
+  IntegrationRun,
   Meeting,
   NavigationItem,
   ReportTemplate,
@@ -34,6 +38,8 @@ function createSeedAppData(): AppData {
     clientPortalUsers: seedClientPortalUsers,
     transferSuggestions: seedTransferSuggestions,
     reportTemplates: seedReportTemplates,
+    integrationRuns: seedIntegrationRuns,
+    automationDispatchLog: seedAutomationDispatchLog,
   });
 }
 
@@ -164,6 +170,12 @@ function normalizeAppData(payload: Partial<AppData>): AppData {
       Array.isArray(payload.reportTemplates) && payload.reportTemplates.length
         ? (payload.reportTemplates as ReportTemplate[])
         : seedReportTemplates,
+    integrationRuns: Array.isArray(payload.integrationRuns)
+      ? (payload.integrationRuns as IntegrationRun[])
+      : seedIntegrationRuns,
+    automationDispatchLog: Array.isArray(payload.automationDispatchLog)
+      ? (payload.automationDispatchLog as AutomationDispatchLog[])
+      : seedAutomationDispatchLog,
   };
 }
 

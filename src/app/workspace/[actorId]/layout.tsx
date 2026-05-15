@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import { WorkspaceShell } from "@/components/workspace-shell";
+import { requireWorkspaceAccess } from "@/lib/auth";
 import {
   getNavigationForActor,
-  getWorkspaceActor,
-  loadAppData,
 } from "@/lib/app-data";
 
 type WorkspaceLayoutProps = {
@@ -16,8 +15,7 @@ export default async function WorkspaceLayout({
   params,
 }: WorkspaceLayoutProps) {
   const { actorId } = await params;
-  const data = await loadAppData();
-  const actor = getWorkspaceActor(data, actorId);
+  const { data, targetActor: actor } = await requireWorkspaceAccess(actorId);
 
   if (!actor) {
     notFound();

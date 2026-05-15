@@ -50,6 +50,25 @@ export const integrationBlueprints: IntegrationBlueprint[] = [
       "Povezati public/data API i definisati kako se Master Mind i BDP proizvodi mapiraju na klijente.",
   },
   {
+    id: "optiverse",
+    title: "Optiverse",
+    category: "Operativa",
+    description:
+      "Veza sa spoljnim operativnim sistemom za profil klijenta, milestone signal i handoff podatke koji pomazu ekspertima.",
+    envKeys: ["OPTIVERSE_API_BASE_URL", "OPTIVERSE_API_TOKEN"],
+    pulls: [
+      "Profil klijenta i eksterni ID",
+      "Operativni milestone i health signal",
+      "Hand-off podaci koje CS unosi van aplikacije",
+    ],
+    pushes: [
+      "Povezivanje Optiverse profila na karticu klijenta",
+      "Brzi sync operativnih signala u consultant hub",
+    ],
+    nextStep:
+      "Dodati mapiranje Optiverse profila po klijentu i jedan manual sync endpoint za osvezavanje signala.",
+  },
+  {
     id: "drive",
     title: "Google Drive",
     category: "Storage",

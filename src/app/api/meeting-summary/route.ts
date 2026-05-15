@@ -1,5 +1,10 @@
 import { generateMeetingReportPreview } from "@/lib/ai-reporting";
 import { getClientById, loadAppData } from "@/lib/app-data";
+import {
+  isAuthApiError,
+  requireStaffApiAccess,
+  requireStaffApiClientAccess,
+} from "@/lib/auth";
 import { MeetingReportPreview, ReportTemplate, SummaryResult } from "@/lib/types";
 
 function splitIdeas(transcript: string) {
@@ -63,53 +68,70 @@ function pickTemplate(
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as {
-    clientId?: string;
-    meetingId?: string;
-    clientName?: string;
-    meetingTitle?: string;
-    transcript?: string;
-    templateId?: string;
-    internalNotes?: string;
-    includeSourceIds?: string[];
-  };
+  try {
+    const body = (await request.json()) as {
+      clientId?: string;
+      meetingId?: string;
+      clientName?: string;
+      meetingTitle?: string;
+      transcript?: string;
+      templateId?: string;
+      internalNotes?: string;
+      includeSourceIds?: string[];
+    };
 
-  const transcript = body.transcript?.trim();
+    const transcript = body.transcript?.trim();
 
-  if (!transcript) {
-    return Response.json(
-      { error: "Transkript je obavezan." },
-      { status: 400 },
+    if (!transcript) {
+      return Response.json(
+        { error: "Transkript je obavezan." },
+        { status: 400 },
+      );
+    }
+
+    if (body.clientId) {
+      await requireStaffApiClientAccess(body.clientId);
+    } else {
+      await requireStaffApiAccess();
+    }
+
+    const data = await loadAppData();
+    const client = body.clientId ? getClientById(data, body.clientId) : undefined;
+    const meeting = client?.meetings.find((item) => item.id === body.meetingId);
+    const template = pickTemplate(
+      data.reportTemplates,
+      body.templateId,
+      client?.programId,
     );
+
+    if (client && template) {
+      const result: MeetingReportPreview = generateMeetingReportPreview({
+        client,
+        meeting,
+        transcript,
+        template,
+        internalNotes: body.internalNotes,
+        sourceIds: Array.isArray(body.includeSourceIds) ? body.includeSourceIds : [],
+      });
+
+      return Response.json(result);
+    }
+
+    return Response.json(
+      buildFallbackResult({
+        clientName: body.clientName,
+        meetingTitle: body.meetingTitle,
+        transcript,
+      }),
+    );
+  } catch (error) {
+    if (isAuthApiError(error)) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
+
+    const message =
+      error instanceof Error ? error.message : "Neuspesna AI obrada sastanka.";
+
+    return Response.json({ error: message }, { status: 500 });
   }
-
-  const data = await loadAppData();
-  const client = body.clientId ? getClientById(data, body.clientId) : undefined;
-  const meeting = client?.meetings.find((item) => item.id === body.meetingId);
-  const template = pickTemplate(
-    data.reportTemplates,
-    body.templateId,
-    client?.programId,
-  );
-
-  if (client && template) {
-    const result: MeetingReportPreview = generateMeetingReportPreview({
-      client,
-      meeting,
-      transcript,
-      template,
-      internalNotes: body.internalNotes,
-      sourceIds: Array.isArray(body.includeSourceIds) ? body.includeSourceIds : [],
-    });
-
-    return Response.json(result);
-  }
-
-  return Response.json(
-    buildFallbackResult({
-      clientName: body.clientName,
-      meetingTitle: body.meetingTitle,
-      transcript,
-    }),
-  );
 }

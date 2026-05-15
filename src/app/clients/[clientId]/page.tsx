@@ -32,6 +32,7 @@ import {
   getProgramById,
   loadAppData,
 } from "@/lib/app-data";
+import { requireStaffClientAccess } from "@/lib/auth";
 import { formatDate, formatDateTime } from "@/lib/formatting";
 import { getProgramPlaybook } from "@/lib/operating-model";
 import { generateJourney } from "@/lib/journey";
@@ -124,8 +125,7 @@ export async function generateMetadata({
 
 export default async function ClientDetailsPage({ params }: ClientPageProps) {
   const { clientId } = await params;
-  const data = await loadAppData();
-  const client = getClientById(data, clientId);
+  const { data, client } = await requireStaffClientAccess(clientId);
 
   if (!client) {
     notFound();
