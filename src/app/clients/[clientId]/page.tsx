@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getMeetingTemplatesForProgram } from "@/lib/admin-blueprints";
+import { ActionBoardManager } from "@/components/action-board-manager";
 import { AppShell } from "@/components/app-shell";
 import { ClientOperationsPanel } from "@/components/client-operations-panel";
 import { MeetingReportWorkspace } from "@/components/meeting-report-workspace";
+import { MeetingOperationsPanel } from "@/components/meeting-operations-panel";
 import { SectionCard } from "@/components/section-card";
 import { StatusChip } from "@/components/status-chip";
 import {
@@ -142,6 +145,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
   const actionStats = getClientActionBoardStats(client);
   const meetingBreakdown = getClientMeetingBreakdown(client);
   const complianceStats = getClientMeetingComplianceStats(client);
+  const programMeetingTemplates = getMeetingTemplatesForProgram(client.programId);
 
   return (
     <AppShell>
@@ -426,14 +430,19 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
         <SectionCard
           eyebrow="Operativa"
           title="Operativni centar klijenta"
-          description="Posle sastanka ekspert unosi izvestaj, bira AI template, osvezava izvore i po potrebi menja eksperte."
+          description="Ovde tim vodi kompletan radni tok: planira sastanke, cuva izvestaje, vodi akcije i odrzava ko je odgovoran za klijenta."
         >
           <div className="grid gap-6">
+            <MeetingOperationsPanel
+              client={client}
+              meetingTemplates={programMeetingTemplates}
+            />
             <MeetingReportWorkspace
               client={client}
               staffUsers={data.staffUsers}
               reportTemplates={data.reportTemplates}
             />
+            <ActionBoardManager client={client} />
             <ClientOperationsPanel client={client} staffUsers={data.staffUsers} />
           </div>
         </SectionCard>

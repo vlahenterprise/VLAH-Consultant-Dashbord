@@ -18,6 +18,7 @@ import {
   ClientAssignment,
   ClientDataSource,
   EmployeeRole,
+  MeetingAction,
   Meeting,
   MeetingReportPreview,
   MeetingTemplate,
@@ -91,6 +92,31 @@ type SaveMeetingReportInput = {
   preview?: MeetingReportPreview;
 };
 
+type SaveClientActionBoardInput = {
+  clientId: string;
+  scope: "shared" | "meeting";
+  meetingId?: string;
+  actions: MeetingAction[];
+};
+
+type UpsertClientMeetingInput = {
+  clientId: string;
+  meetingId?: string;
+  title: string;
+  type: string;
+  scheduledStartAt: string;
+  durationMinutes: number;
+  modules: string[];
+  participants: string[];
+  status: Meeting["status"];
+  summary?: string;
+  videoUrl: string;
+  audioUrl: string;
+  driveFolderUrl: string;
+  materialsUrl: string;
+  recordingsUrl: string;
+};
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -103,6 +129,10 @@ function slugify(value: string) {
 
 function buildId(prefix: string, value: string) {
   return `${prefix}-${slugify(value)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function toTitleFromModule(module: string) {
@@ -293,7 +323,121 @@ function normalizeAssignments(assignments: ClientAssignment[]) {
     }));
 }
 
+function isValidIsoDate(value: string) {
+  return !Number.isNaN(new Date(value).getTime());
+}
+
+function getClientActionSource(client: Client) {
+  return client.sharedActionBoard.length > 0
+    ? client.sharedActionBoard
+    : client.meetings.flatMap((meeting) => meeting.actions);
+}
+
+function getActionCompletion(action: MeetingAction) {
+  if (typeof action.completionPercent === "number") {
+    return clamp(action.completionPercent, 0, 100);
+  }
+
+  return action.done ? 100 : 0;
+}
+
+function normalizeActionList(actions: MeetingAction[]) {
+  return actions
+    .filter((action) => action.title?.trim())
+    .map((action, index) => {
+      const owner: MeetingAction["owner"] =
+        action.owner === "Klijent" ? "Klijent" : "Konsultant";
+
+      return {
+        id: action.id || buildId("action", `${action.title}-${index}`),
+        title: action.title.trim(),
+        owner,
+        priority: action.priority ?? "Srednji",
+        completionPercent: action.done ? 100 : getActionCompletion(action),
+        dueDate: isValidIsoDate(action.dueDate)
+          ? new Date(action.dueDate).toISOString()
+          : new Date().toISOString(),
+        done: Boolean(action.done),
+        sharedWithClient: Boolean(action.sharedWithClient),
+        reminderBeforeDue: Boolean(action.reminderBeforeDue),
+        reminderWhenOverdue: Boolean(action.reminderWhenOverdue),
+        reminderOnCreate: Boolean(action.reminderOnCreate),
+      };
+    });
+}
+
+function refreshClientAnalytics(client: Client) {
+  const actions = getClientActionSource(client);
+  const overdueActions = actions.filter(
+    (action) => !action.done && new Date(action.dueDate).getTime() < Date.now(),
+  ).length;
+  const actionCompletion = actions.length
+    ? Math.round(
+        actions.reduce((sum, action) => sum + getActionCompletion(action), 0) /
+          actions.length,
+      )
+    : 0;
+
+  const completedMeetings = client.meetings.filter(
+    (meeting) => meeting.status !== "Zakazan",
+  );
+  const aiCoverage = completedMeetings.length
+    ? Math.round(
+        (completedMeetings.filter((meeting) => meeting.aiSummaryReady).length /
+          completedMeetings.length) *
+          100,
+      )
+    : 0;
+  const onTimeRate = completedMeetings.length
+    ? Math.round(
+        (completedMeetings.filter((meeting) => meeting.clientOnTime).length /
+          completedMeetings.length) *
+          100,
+      )
+    : 0;
+  const meetingConsistency = completedMeetings.length
+    ? Math.round(onTimeRate * 0.5 + aiCoverage * 0.5)
+    : 0;
+  const targetUsage = client.meetingAverageTarget
+    ? clamp(
+        Math.round((client.meetings.length / client.meetingAverageTarget) * 100),
+        0,
+        100,
+      )
+    : 100;
+  const milestoneProgress = clamp(
+    Math.round(actionCompletion * 0.45 + targetUsage * 0.35 + aiCoverage * 0.2),
+    0,
+    100,
+  );
+  const riskPenalty =
+    client.riskLevel === "Visok" ? 12 : client.riskLevel === "Srednji" ? 6 : 0;
+  const healthScore = clamp(
+    Math.round(
+      actionCompletion * 0.35 +
+        meetingConsistency * 0.35 +
+        milestoneProgress * 0.3 -
+        overdueActions * 4 -
+        riskPenalty,
+    ),
+    0,
+    100,
+  );
+
+  client.analytics = {
+    ...client.analytics,
+    healthScore,
+    actionCompletion,
+    meetingConsistency,
+    milestoneProgress,
+  };
+}
+
 function rebuildStaffClientIndex(draft: AppData) {
+  draft.clients.forEach(refreshClientAnalytics);
+  const now = Date.now();
+  const nextWeek = now + 7 * 24 * 60 * 60 * 1000;
+
   draft.staffUsers = draft.staffUsers.map((staff) => ({
     ...staff,
     activeClientIds: draft.clients
@@ -301,6 +445,40 @@ function rebuildStaffClientIndex(draft: AppData) {
         client.assignments.some((assignment) => assignment.consultantId === staff.id),
       )
       .map((client) => client.id),
+    dashboard: (() => {
+      const assignedClients = draft.clients.filter((client) =>
+        client.assignments.some((assignment) => assignment.consultantId === staff.id),
+      );
+      const weeklyMeetings = assignedClients
+        .flatMap((client) => client.meetings)
+        .filter((meeting) => {
+          const meetingTime = new Date(meeting.scheduledStartAt).getTime();
+          return meetingTime >= now && meetingTime <= nextWeek;
+        }).length;
+      const openActions = assignedClients
+        .flatMap((client) => getClientActionSource(client))
+        .filter((action) => !action.done).length;
+      const pendingSummaries = assignedClients
+        .flatMap((client) => client.meetings)
+        .filter((meeting) => meeting.status !== "Zakazan" && !meeting.aiSummaryReady)
+        .length;
+      const avgHealth = assignedClients.length
+        ? Math.round(
+            assignedClients.reduce(
+              (sum, client) => sum + client.analytics.healthScore,
+              0,
+            ) / assignedClients.length,
+          )
+        : 0;
+
+      return {
+        weeklyMeetings,
+        openActions,
+        pendingSummaries,
+        utilization: clamp(Math.round((assignedClients.length / 6) * 100), 0, 100),
+        clientSatisfaction: clamp(avgHealth + 6, 0, 100),
+      };
+    })(),
   }));
 }
 
@@ -863,6 +1041,140 @@ export async function saveMeetingReport(input: SaveMeetingReportInput) {
       });
     }
 
+    rebuildStaffClientIndex(draft);
+    return draft;
+  });
+}
+
+export async function saveClientActionBoard(input: SaveClientActionBoardInput) {
+  return updateAppData((draft) => {
+    const client = draft.clients.find((item) => item.id === input.clientId);
+    if (!client) {
+      throw new Error("Klijent nije pronadjen.");
+    }
+
+    const normalizedActions = normalizeActionList(input.actions);
+
+    if (input.scope === "shared") {
+      client.sharedActionBoard = normalizedActions;
+    } else {
+      const meeting = client.meetings.find((item) => item.id === input.meetingId);
+      if (!meeting) {
+        throw new Error("Sastanak za ovu action listu nije pronadjen.");
+      }
+
+      meeting.actions = normalizedActions;
+    }
+
+    rebuildStaffClientIndex(draft);
+    return draft;
+  });
+}
+
+export async function upsertClientMeeting(input: UpsertClientMeetingInput) {
+  return updateAppData((draft) => {
+    const client = draft.clients.find((item) => item.id === input.clientId);
+    if (!client) {
+      throw new Error("Klijent nije pronadjen.");
+    }
+
+    const scheduledStartAt = isValidIsoDate(input.scheduledStartAt)
+      ? new Date(input.scheduledStartAt).toISOString()
+      : new Date().toISOString();
+    const durationMinutes = clamp(Math.round(input.durationMinutes || 60), 15, 240);
+    const participants = input.participants
+      .map((participant) => participant.trim())
+      .filter(Boolean);
+    const modules = input.modules.map((module) => module.trim()).filter(Boolean);
+
+    if (!input.title.trim()) {
+      throw new Error("Naziv sastanka je obavezan.");
+    }
+
+    if (!participants.length) {
+      throw new Error("Potrebno je bar jedno ime u listi prisutnih.");
+    }
+
+    const existingMeeting = input.meetingId
+      ? client.meetings.find((meeting) => meeting.id === input.meetingId)
+      : undefined;
+
+    const nextMeeting: Meeting = existingMeeting
+      ? {
+          ...existingMeeting,
+          title: input.title.trim(),
+          type: input.type.trim(),
+          date: scheduledStartAt,
+          scheduledStartAt,
+          durationMinutes,
+          modules,
+          participants,
+          status: input.status,
+          summary: input.summary?.trim() || existingMeeting.summary,
+          actualStartAt:
+            existingMeeting.status === "Zakazan" ? scheduledStartAt : existingMeeting.actualStartAt,
+          endedAt:
+            existingMeeting.status === "Zakazan"
+              ? addMinutes(scheduledStartAt, durationMinutes)
+              : existingMeeting.endedAt,
+          overran:
+            existingMeeting.status === "Zakazan"
+              ? false
+              : existingMeeting.durationMinutes > 60,
+          recording: {
+            videoUrl: input.videoUrl.trim() || existingMeeting.recording.videoUrl,
+            audioUrl: input.audioUrl.trim() || existingMeeting.recording.audioUrl,
+            driveFolderUrl:
+              input.driveFolderUrl.trim() || existingMeeting.recording.driveFolderUrl,
+            materialsUrl:
+              input.materialsUrl.trim() || existingMeeting.recording.materialsUrl,
+            recordingsUrl:
+              input.recordingsUrl.trim() || existingMeeting.recording.recordingsUrl,
+          },
+        }
+      : {
+          id: buildId("meeting", `${client.id}-${input.title}`),
+          title: input.title.trim(),
+          date: scheduledStartAt,
+          scheduledStartAt,
+          actualStartAt: scheduledStartAt,
+          endedAt: addMinutes(scheduledStartAt, durationMinutes),
+          durationMinutes,
+          type: input.type.trim(),
+          modules,
+          participants,
+          status: input.status,
+          clientOnTime: true,
+          overran: false,
+          emailSentToClient: false,
+          aiSummaryReady: false,
+          summary:
+            input.summary?.trim() ||
+            "Planiran sastanak. Izvestaj ce biti dopunjen kada ekspert zavrsi obradu.",
+          transcriptPreview: "",
+          actions: [],
+          recording: {
+            videoUrl: input.videoUrl.trim() || "#",
+            audioUrl: input.audioUrl.trim() || "#",
+            driveFolderUrl: input.driveFolderUrl.trim() || client.driveRootUrl,
+            materialsUrl: input.materialsUrl.trim() || client.driveRootUrl,
+            recordingsUrl: input.recordingsUrl.trim() || client.driveRootUrl,
+          },
+        };
+
+    if (existingMeeting) {
+      client.meetings = client.meetings.map((meeting) =>
+        meeting.id === existingMeeting.id ? nextMeeting : meeting,
+      );
+    } else {
+      client.meetings = [...client.meetings, nextMeeting].sort(
+        (left, right) =>
+          new Date(left.scheduledStartAt).getTime() -
+          new Date(right.scheduledStartAt).getTime(),
+      );
+    }
+
+    rebuildStaffClientIndex(draft);
     return draft;
   });
 }

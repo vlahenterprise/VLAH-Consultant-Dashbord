@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import {
+  saveClientActionBoard,
+  upsertClientMeeting,
   updateClientAssignments,
   updateClientDataSources,
 } from "@/lib/admin-mutations";
@@ -34,6 +36,45 @@ export async function POST(request: Request) {
         noteTitle: body.noteTitle,
         noteDetails: body.noteDetails,
         noteOwner: body.noteOwner,
+      });
+
+      return NextResponse.json({
+        ok: true,
+        clientCount: result.clients.length,
+      });
+    }
+
+    if (body.action === "saveActionBoard") {
+      const result = await saveClientActionBoard({
+        clientId: body.clientId,
+        scope: body.scope === "shared" ? "shared" : "meeting",
+        meetingId: body.meetingId,
+        actions: Array.isArray(body.actions) ? body.actions : [],
+      });
+
+      return NextResponse.json({
+        ok: true,
+        clientCount: result.clients.length,
+      });
+    }
+
+    if (body.action === "upsertMeeting") {
+      const result = await upsertClientMeeting({
+        clientId: body.clientId,
+        meetingId: body.meetingId,
+        title: body.title || "",
+        type: body.type || "",
+        scheduledStartAt: body.scheduledStartAt || "",
+        durationMinutes: Number(body.durationMinutes) || 60,
+        modules: Array.isArray(body.modules) ? body.modules : [],
+        participants: Array.isArray(body.participants) ? body.participants : [],
+        status: body.status || "Zakazan",
+        summary: body.summary,
+        videoUrl: body.videoUrl || "",
+        audioUrl: body.audioUrl || "",
+        driveFolderUrl: body.driveFolderUrl || "",
+        materialsUrl: body.materialsUrl || "",
+        recordingsUrl: body.recordingsUrl || "",
       });
 
       return NextResponse.json({
